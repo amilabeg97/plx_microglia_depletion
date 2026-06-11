@@ -1,0 +1,17 @@
+miRTarBase ID,miRNA,Species (miRNA),Target Gene,Target Gene (Entrez ID),Species (Target Gene),Experiments,Support Type,References (PMID)
+MIRT004806,mmu-miR-146a-5p,mmu,VSIVgp2,1489832,vsv,Luciferase reporter assay,Non-Functional MTI,17613256
+MIRT004067,mmu-miR-146a-5p,mmu,Irak2,108960,mmu,Luciferase reporter assay//Western blot,Functional MTI,19596990
+MIRT005812,mmu-miR-146a-5p,mmu,Stat1,20846,mmu,Immunoblot//Luciferase reporter assay//qRT-PCR//Western blot,Functional MTI,20850013
+MIRT004070,mmu-miR-146a-5p,mmu,Traf6,22034,mmu,Immunoblot//Luciferase reporter assay//qRT-PCR//Western blot,Functional MTI,20850013
+MIRT004069,mmu-miR-146a-5p,mmu,Irak1,16179,mmu,Immunoblot//Luciferase reporter assay//qRT-PCR//Western blot,Functional MTI,20850013
+MIRT006391,mmu-miR-146a-5p,mmu,Notch1,18128,mmu,Luciferase reporter assay,Functional MTI,21730286
+MIRT007164,mmu-miR-146a-5p,mmu,Med1,19014,mmu,Luciferase reporter assay,Functional MTI,23221399
+MIRT054076,mmu-miR-146a-5p,mmu,Relb,19698,mmu,Flow//GFP reporter assay//Immunofluorescence//Luciferase reporter assay//qRT-PCR,Functional MTI,22545247
+MIRT437897,mmu-miR-146a-5p,mmu,Map1b,17755,mmu,Luciferase reporter assay//Western blot,Functional MTI,23699512
+MIRT732048,mmu-miR-146a-5p,mmu,Wnt1,22408,mmu,Immunohistochemistry//Luciferase reporter assay//Microarray//qRT-PCR//Western blot,Functional MTI,26537990
+MIRT732049,mmu-miR-146a-5p,mmu,Wnt5a,22418,mmu,Immunohistochemistry//Luciferase reporter assay//Microarray//qRT-PCR//Western blot,Functional MTI,26537990
+MIRT734180,mmu-miR-146a-5p,mmu,Pln,18821,mmu,ELISA////Luciferase reporter assay//Microarray//qRT-PCR//Western blotting,Functional MTI,31507414
+MIRT734181,mmu-miR-146a-5p,mmu,Ank2,109676,mmu,ELISA////Luciferase reporter assay//Microarray//qRT-PCR//Western blotting,Functional MTI,31507414
+MIRT003561,mmu-miR-146a-5p,mmu,Ifng,15978,mmu,Western blot,Functional MTI,18791161
+MIRT004574,mmu-miR-146a-5p,mmu,Nos2,18126,mmu,Western blot,Functional MTI,18791161
+MIRT755315,mmu-miR-146a-5p,mmu,Hipk3,15259,mmu,Western blotting//Immunohistochemistry (IHC)//qRT-PCR//ELISA,Functional MTI,35434020
