@@ -117,7 +117,7 @@ diff_exp_external <- read.table(
 strip_mmu <- function(x) sub("^mmu-", "", x)
 
 # ---------------------- Sample Groups Definition ----------------------
-### Define which sample belongs to which brain region
+### Sample-to-group (treatment x sex) assignment within each region
 all_samples_columns_small_rna <- list(
   Control_M = c("S17", "S18", "S19", "S20"), 
   PLX_M = c("S7", "S8", "S9", "S10", "S11", "S12"), 
@@ -160,7 +160,6 @@ process_brain_region <- function(data, sample_groups) {
 }
 
 # ---------------------- QC Brain region correlation analysis ----------------------
-# Read correlation data
 corr_data <- read.csv("Input files/sample_correlation.spearman.csv", sep = "\t")
 
 # Helper functions
@@ -209,14 +208,12 @@ get_sample_num <- function(sample_id) {
   return(as.numeric(num))
 }
 
-# Get sample IDs
 all_samples <- colnames(corr_data)
 sample_regions <- sapply(all_samples, get_region)
 
 #cat("Sample distribution across regions:\n")
 #print(table(sample_regions))
 
-# Convert to matrix
 corr_matrix_full <- as.matrix(corr_data)
 
 # Color scheme
@@ -323,7 +320,7 @@ ht_all <- Heatmap(
 
 ### Save the heatmap
 #pdf("Figures and plots/PDFs/All_Regions_Single_correlation_heatmap.pdf", width = 11, height = 13)
-draw(ht_all, heatmap_legend_side = "right", annotation_legend_side = "right")
+#draw(ht_all, heatmap_legend_side = "right", annotation_legend_side = "right")
 #dev.off()
 
 # ---------------------- QC Number of mapped lncRNAs ----------------------
@@ -347,7 +344,7 @@ qc_data$Treatment <- assignments[,1]
 qc_data$Sex <- assignments[,2]
 qc_data$Group <- paste(qc_data$Treatment, qc_data$Sex, sep = "_")
 
-# Select ncRNA mapping variables
+# ncRNA mapping variables (one column per ncRNA type)
 ncRNA_vars <- c(
   "total_mapped_tRNA",
   "total_mapped_to_precursor_or_miRNA",
@@ -359,17 +356,14 @@ ncRNA_vars <- c(
   "total_mapped_lncRNA"
 )
 
-# Extract the ncRNA data matrix
 ncRNA_matrix <- as.matrix(qc_data[, ncRNA_vars])
 rownames(ncRNA_matrix) <- qc_data$Sample_ID
 
-# Function to create complete data for a region with all 20 sample positions
+# Build a 20-position (20 samples) layout for a region
 create_complete_region_data <- function(region_name, qc_data, ncRNA_matrix) {
-  # Get existing samples for this region
   region_idx <- which(qc_data$Region == region_name)
   region_qc <- qc_data[region_idx, ]
   
-  # Create complete data frame with all 20 positions
   complete_data <- data.frame(
     Sample_Number = 1:20,
     Treatment = NA,
@@ -377,12 +371,11 @@ create_complete_region_data <- function(region_name, qc_data, ncRNA_matrix) {
     stringsAsFactors = FALSE
   )
   
-  # Create complete matrix for ncRNA data (all 20 positions)
   complete_matrix <- matrix(0, nrow = ncol(ncRNA_matrix), ncol = 20)
   rownames(complete_matrix) <- colnames(ncRNA_matrix)
   colnames(complete_matrix) <- paste0("Sample", 1:20)
   
-  # Fill in existing data
+  # Place each existing sample at its own position 
   for (i in 1:nrow(region_qc)) {
     sample_num <- region_qc$Sample_Number[i]
     complete_data$Treatment[sample_num] <- region_qc$Treatment[i]
@@ -393,7 +386,7 @@ create_complete_region_data <- function(region_name, qc_data, ncRNA_matrix) {
   return(list(metadata = complete_data, matrix = complete_matrix))
 }
 
-# Calculate global y-axis maximum across ALL regions (only using existing data)
+# Shared y-axis max across all regions
 global_ymax <- 0
 for (region in regions) {
   idx <- which(qc_data$Region == region)
@@ -404,15 +397,13 @@ for (region in regions) {
   }
 }
 
-# Add padding to global max
 global_ymax <- global_ymax * 1.15
-
 cat("Global y-axis maximum:", global_ymax, "\n")
 
 ### Create plot by region - vertical layout
 #pdf("Figures and plots/PDFs/ncRNA_mapping_by_region_improved.pdf", width = 8, height = 11)
 
-# Set up layout: 4 plots + 1 legend panel at bottom
+# Four region panels stacked vertically + 1 legend at the bottom
 layout(matrix(c(1, 2, 3, 4, 5), nrow = 5, ncol = 1),
        heights = c(1, 1, 1, 1, 0.25))
 
@@ -425,37 +416,33 @@ for (i in seq_along(regions)) {
   
   region <- regions[[i]]
   
-  # Get complete data structure for this region
   complete_region <- create_complete_region_data(region, qc_data, ncRNA_matrix)
   region_data <- complete_region$matrix
   region_meta <- complete_region$metadata
   
-  # Identify which bars should be empty (missing samples)
+  # Missing samples get a gray placeholder
   empty_bars <- which(is.na(region_meta$Treatment))
   filled_bars <- which(!is.na(region_meta$Treatment))
   
-  # Get bar width info from a test barplot
+  # Bar width from a dry-run barplot, needed to size the annotation rectangles below
   test_bp <- barplot(region_data[1,], plot = FALSE, space = 0.35)
   bar_width <- diff(test_bp)[1] / 1.35
   
-  # Create barplot with light gray background
+  # Open an empty plotting region first so gridlines can be drawn behind the bars
   plot.new()
   plot.window(xlim = range(test_bp) + c(-0.5, 0.5), ylim = c(0, global_ymax))
   
-  # Add consistent grid lines (PCA-style background)
-  # Create evenly spaced horizontal grid lines every 1e+07 (10 million)
+  # Horizontal gridlines every 10 million reads
   y_interval <- 1e+07
   y_gridlines <- seq(0, ceiling(global_ymax / y_interval) * y_interval, by = y_interval)
   abline(h = y_gridlines, col = "gray90", lty = "solid", lwd = 0.5)
   
-  # Draw title
   title(main = region, cex.main = 1.5, font.main = 2, line = 1.5)
-  
-  # Add axes
+
   axis(2, las = 1, cex.axis = 1)
   mtext("Total Mapped Reads", side = 2, line = 4.5, cex = 1, font = 2)
   
-  # Add barplot on top
+  # Overlay the stacked barplot on top of the gridlines
   par(new = TRUE)
   bp <- barplot(
     region_data,
@@ -470,21 +457,19 @@ for (i in seq_along(regions)) {
     names.arg = rep("", ncol(region_data)),
     add = TRUE
   )
-  
-  # Add sample numbers below bars
+
   axis(1, at = bp, labels = 1:20, las = 1, cex.axis = 0.8, tick = FALSE, line = -0.5)
   
-  # Calculate annotation positions
+  # Annotation strip positions, just below the x-axis (treatment row above sex row)
   annotation_bottom <- -0.05 * global_ymax
   treatment_bottom <- annotation_bottom
   treatment_top <- treatment_bottom + (0.03 * global_ymax)
   sex_bottom <- treatment_bottom - (0.05 * global_ymax)
   sex_top <- sex_bottom + (0.03 * global_ymax)
   
-  # Set clipping to allow drawing in margin
-  par(xpd = TRUE)
+  par(xpd = TRUE) # allow drawing into the margin below the plot
   
-  # Annotation: Treatment (only for filled bars)
+  # Treatment color strip (filled bars only)
   for (bar_idx in filled_bars) {
     rect(
       xleft  = bp[bar_idx] - bar_width/2,
@@ -496,7 +481,7 @@ for (i in seq_along(regions)) {
     )
   }
   
-  # Annotation: Sex (only for filled bars)
+  # Sex color strip (filled bars only)
   for (bar_idx in filled_bars) {
     rect(
       xleft  = bp[bar_idx] - bar_width/2,
@@ -508,7 +493,7 @@ for (i in seq_along(regions)) {
     )
   }
   
-  # Mark empty bars with light gray background
+  # Gray out positions with no sample
   if (length(empty_bars) > 0) {
     for (bar_idx in empty_bars) {
       rect(
@@ -522,8 +507,7 @@ for (i in seq_along(regions)) {
       )
     }
   }
-  
-  # Reset clipping
+
   par(xpd = FALSE)
 }
 
@@ -533,7 +517,7 @@ plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c
 
 par(xpd = TRUE)
 
-# Create a single comprehensive legend layout
+# Three legends in the bottom panel: ncRNA type, sex, treatment
 legend(
   x = "right",
   inset = c(0, 0),
@@ -581,7 +565,6 @@ legend(
   title.font = 2
 )
 
-
 #dev.off()
 
 # ---------------------- Process Brain Regions ----------------------
@@ -596,7 +579,7 @@ cerebellum_results <- process_brain_region(data_mmu[, c(1, 59:78)],
                                            all_samples_columns_cerebellum)
 
 # ---------------------- Bar Plots - Small RNA (Bregma -2.06) ----------------------
-
+# Define sample columns to keep for data
 columns_of_interest_with_data_points_small_rna <- c(
   "RNA", "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16", 
   "S9", "S10", "S11", "S17", "S12", "S13", "S14", "S18", "S1", "S2", "S3"
@@ -608,6 +591,7 @@ sample_to_treatment_small_rna <- do.call(rbind, lapply(names(all_samples_columns
              stringsAsFactors = FALSE)
 }))
 
+# Re-shape data to long format for plotting
 subset_df_for_box_plots_with_data_points_small_rna <- small_rna_main_results %>%
   filter(RNA %in% miRNAs_of_interest) %>%
   dplyr::select(all_of(columns_of_interest_with_data_points_small_rna)) %>%
@@ -626,6 +610,7 @@ df_with_outliers_small_rna <- subset_df_for_box_plots_with_data_points_small_rna
   ungroup() %>%
   mutate(Treatment = factor(Treatment, levels = treatment_levels))
 
+### Build one bar plot per miRNA
 plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
   group_split(RNA) %>%
   lapply(function(df) {
@@ -668,7 +653,6 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
       )
   })
 
-# Display plots
 plots_with_stats_small_rna
 
 # Save the plots
@@ -908,6 +892,7 @@ print(res_adj$paired_plot)
 
 
 # ---------------------- PCA Analysis - All Brain Regions ----------------------
+### Prepare expression matrix for PCA
 pca_data <- data_mmu %>%
   as.data.frame()
 
@@ -915,13 +900,14 @@ rownames(pca_data) <- pca_data$RNA
 pca_data <- pca_data[, -1]
 pca_data <- t(pca_data) %>% as.data.frame()
 
+# Filter out miRNAs with zero variance or zero mean
 col_vars <- apply(pca_data, 2, var, na.rm = TRUE)
 col_means <- colMeans(pca_data, na.rm = TRUE)
 cols_to_keep <- (col_vars > 0) & (col_means > 0)
 pca_data_filtered <- pca_data[, cols_to_keep]
 
+# Build sample metadata
 sample_ids <- rownames(pca_data_filtered)
-
 sample_metadata <- data.frame(
   Sample     = sample_ids,
   Region     = sapply(sample_ids, get_region),
@@ -929,6 +915,7 @@ sample_metadata <- data.frame(
   stringsAsFactors = FALSE
 )
 
+# Assign treatment and sex from region and sample number
 ts <- t(mapply(assign_treatment_sex, sample_metadata$Region, sample_metadata$Sample_Num))
 sample_metadata$Treatment <- ts[, 1]
 sample_metadata$Sex        <- ts[, 2]
@@ -936,8 +923,9 @@ sample_metadata$Sex        <- ts[, 2]
 sample_metadata_pca <- sample_metadata %>%
   mutate(Group = paste(Treatment, Sex, sep = "_"),
          Region_Treatment = paste(Region, Treatment, sep = "_"))
-pca_result <- prcomp(pca_data_filtered, scale. = TRUE, center = TRUE)
 
+### Run the PCA and extract variance explained by each PC
+pca_result <- prcomp(pca_data_filtered, scale. = TRUE, center = TRUE)
 variance_explained <- summary(pca_result)$importance[2,] * 100
 pc1_var <- round(variance_explained[1], 1)
 pc2_var <- round(variance_explained[2], 1)
@@ -945,6 +933,7 @@ pc2_var <- round(variance_explained[2], 1)
 pca_coords <- data.frame(PC1 = pca_result$x[,1], PC2 = pca_result$x[,2])
 plot_data <- cbind(sample_metadata_pca, pca_coords)
 
+### PCA 1: colored by brain region, shaped by treatment
 pca_region <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Region, shape = Treatment)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = region_colors) +
@@ -966,6 +955,7 @@ pca_region <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Region, shape = Tr
     legend.position = "right"
   )
 
+### PCA 2: colored by treatment, shaped by brain region
 pca_treatment <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Treatment, shape = Region)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = treatment_colors) +
@@ -988,6 +978,7 @@ pca_treatment <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Treatment, shap
     legend.position = "right"
   )
 
+### PCA 3: colored by sex, shaped by treatment
 pca_sex <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Sex, shape = Treatment)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = sex_colors) +
@@ -1009,15 +1000,6 @@ pca_sex <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Sex, shape = Treatmen
     legend.position = "right"
   )
 
-combined_pca <- (pca_region | pca_treatment | pca_sex) +
-  plot_annotation(
-    title = "miRNA Expression Landscape Across Brain Regions",
-    theme = theme(plot.title = element_text(size = 18, face = "bold", hjust = 0.5, 
-                                            family = "Helvetica"))
-  )
-
-print(combined_pca)
-
 #ggsave("Figures and plots/PCAs/PCA_by_region.png", pca_region, width = 10, height = 8, dpi = 300)
 #ggsave("Figures and plots/PCAs/PCA_by_treatment.png", pca_treatment, width = 10, height = 8, dpi = 300)
 #ggsave("Figures and plots/PCAs/PCA_by_sex.png", pca_sex, width = 10, height = 8, dpi = 300)
@@ -1027,7 +1009,6 @@ print(combined_pca)
 #ggsave("Figures and plots/PCAs/PCA_by_sex.pdf", pca_sex, width = 10, height = 8, dpi = 300)
 
 # ---------------------- Exporting all the tables for supplement ----------------------
-
 ### Output directory
 OUT_DIR <- "Figures and plots/Generated matrices/For supplement"
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -1088,7 +1069,7 @@ add_index_sheet <- function(wb, sheet_names, descriptions, counts = NULL) {
 }
 
 
-### TABLE 2 — All miRNAs with deregulation status (raw + adj p-values, sex-specific, all brain regions)
+### TABLE 2 — all deregulated miRNAs (raw + adj p-values, sex-specific, all brain regions)
 prepare_region_sex_data_full <- function(diff_express_df, region_code, region_name) {
   
   make_block <- function(sex_code, sex_label) {
@@ -1199,7 +1180,7 @@ export_table2_all_mirnas <- function() {
   writeData(wb, "Summary", summary_df)
   apply_sheet_styles(wb, "Summary", nrow(summary_df), ncol(summary_df), hs, bs)
   
-  # Summary first
+  # Move the Summary sheet to the front of the workbook
   summary_idx <- which(names(wb) == "Summary")
   worksheetOrder(wb) <- c(summary_idx, setdiff(seq_along(names(wb)), summary_idx))
   
@@ -1214,7 +1195,9 @@ mirna_set <- c(
   "miR-146a-5p" = "mmu_miR_146a_000468",
   "miR-153-3p"  = "mmu_miR_153_001191",
   "miR-142a-5p"  = "mmu_miR_142_5p_002248",
-  "miR-142a-3p"  = "mmu_miR_142_3p_000464"
+  "miR-142a-3p"  = "mmu_miR_142_3p_000464",
+  "miR-409-3p" = "mmu_miR_409_3p_002332",
+  "miR-433-5p" = "mmu_miR_433_5p_001078"
 )
 
 cell_type_map <- tibble(
@@ -1226,7 +1209,6 @@ cell_type_map <- tibble(
 
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
-# Load array
 array_pomper <- read_excel(xlsx_pomper_database)
 
 ### Helper function: per-cell-type fold change vs Brainstem
@@ -1308,9 +1290,11 @@ get_sig_set <- function(df, fc_col, p_col,
   strip_mmu(df$RNA[keep])
 }
 
-### Depleted set, DERIVED from this study (union of sig-down any region/sex)
-region_codes_depleted <- c(S = "Bregma -2.06", OB = "Olfactory Bulb",
-                       CP = "Caudate Putamen", CE = "Cerebellum")
+### Depleted set (derived from this study)
+region_codes_depleted <- c(S = "Bregma -2.06", 
+                           OB = "Olfactory Bulb",
+                           CP = "Caudate Putamen", 
+                           CE = "Cerebellum")
 
 get_depleted_set <- function(df, region_codes,
                              fc_threshold = 1, p_threshold = 0.05) {
@@ -1356,8 +1340,12 @@ venn_sets <- list(
   "Microglia-enriched (8W CD45 > Bulk)\n(Walsh et al.)"    = microglia_enriched
 )
 
-A <- depleted_this_study; B <- aging_up; C <- microglia_enriched
-fmt <- function(v, max_names = 4) {
+# Define sets names and function for Venn diagram
+A <- depleted_this_study
+B <- aging_up
+C <- microglia_enriched
+
+venn_function <- function(v, max_names = 4) {
   if (length(v) == 0) return("")
   if (length(v) > max_names) return(as.character(length(v))) 
   paste(v, collapse = "\n")
@@ -1368,13 +1356,13 @@ region_labels <- data.frame(
   x = c(-0.8,  0.8,  0.0,  0.0, -0.5,  0.5,  0.0),
   y = c( 0.8,  0.8, -0.8,  0.8, -0.1, -0.1,  0.2),
   lab = c(
-    fmt(setdiff(setdiff(A, B), C)),
-    fmt(setdiff(setdiff(B, A), C)),
-    fmt(setdiff(setdiff(C, A), B)),
-    fmt(setdiff(intersect(A, B), C)),
-    fmt(setdiff(intersect(A, C), B)),
-    fmt(setdiff(intersect(B, C), A)),
-    fmt(Reduce(intersect, list(A, B, C)))
+    venn_function(setdiff(setdiff(A, B), C)),
+    venn_function(setdiff(setdiff(B, A), C)),
+    venn_function(setdiff(setdiff(C, A), B)),
+    venn_function(setdiff(intersect(A, B), C)),
+    venn_function(setdiff(intersect(A, C), B)),
+    venn_function(setdiff(intersect(B, C), A)),
+    venn_function(Reduce(intersect, list(A, B, C)))
   ),
   stringsAsFactors = FALSE)
 
@@ -1384,8 +1372,7 @@ venn_labeled <- ggvenn(
   stroke_size     = 0.3,
   set_name_size   = 3.5,
   text_size       = 0,
-  show_percentage = FALSE
-) +
+  show_percentage = FALSE) +
   geom_text(data = region_labels, aes(x, y, label = lab),
             inherit.aes = FALSE, size = 2.5, fontface = "italic",
             family = "Helvetica", lineheight = 0.9, color = "black") +
