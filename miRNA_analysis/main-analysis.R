@@ -634,8 +634,13 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
                   position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.85), 
                   alpha = 0.6, size = 2, show.legend = FALSE) +
       scale_fill_manual(values = treatment_colors, name = "Treatment") +
-      stat_compare_means(comparisons = comparisons_filtered, method = "t.test",
-                         label = "p.signif", tip.length = 0.01) +
+      ggsignif::geom_signif(
+        comparisons = comparisons_filtered,
+        test = "t.test",
+        map_signif_level = function(p) sprintf("p = %.2g", p),
+        tip_length = 0.01,
+        textsize = 4
+      ) +
       theme_minimal() +
       ylim(0, 25) +
       labs(title = gene, x = "", y = "rpmm normalized counts") +
@@ -1196,6 +1201,8 @@ mirna_set <- c(
   "miR-153-3p"  = "mmu_miR_153_001191",
   "miR-142a-5p"  = "mmu_miR_142_5p_002248",
   "miR-142a-3p"  = "mmu_miR_142_3p_000464",
+  "miR-200a-3p"  = "mmu_miR_200a_000502",
+  "miR-205-5p"  = "mmu_miR_205_000509",
   "miR-409-3p" = "mmu_miR_409_3p_002332",
   "miR-433-5p" = "mmu_miR_433_5p_001078"
 )
