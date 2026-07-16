@@ -1,0 +1,181 @@
+,Sample,Group,anno_0825,n_cells
+0,PLX1,PLX,Astrocyte,21786
+1,PLX1,PLX,Choroid Plexus,1024
+2,PLX1,PLX,Ependymal,1084
+3,PLX1,PLX,GABAergic,30066
+4,PLX1,PLX,Glutamatergic,65153
+5,PLX1,PLX,MB–HB-Sero–Dopa,479
+6,PLX1,PLX,Microglia,1912
+7,PLX1,PLX,Oligodendyocyte,12532
+8,PLX1,PLX,Vascular,12417
+9,PLX2,PLX,Astrocyte,19570
+10,PLX2,PLX,Choroid Plexus,1205
+11,PLX2,PLX,Ependymal,1640
+12,PLX2,PLX,GABAergic,15923
+13,PLX2,PLX,Glutamatergic,50617
+14,PLX2,PLX,MB–HB-Sero–Dopa,328
+15,PLX2,PLX,Microglia,2285
+16,PLX2,PLX,Oligodendyocyte,14662
+17,PLX2,PLX,Vascular,12736
+18,PLX3,PLX,Astrocyte,20768
+19,PLX3,PLX,Choroid Plexus,3565
+20,PLX3,PLX,Ependymal,1998
+21,PLX3,PLX,GABAergic,18608
+22,PLX3,PLX,Glutamatergic,50548
+23,PLX3,PLX,MB–HB-Sero–Dopa,449
+24,PLX3,PLX,Microglia,3345
+25,PLX3,PLX,Oligodendyocyte,15637
+26,PLX3,PLX,Vascular,22287
+27,PLX4,PLX,Astrocyte,23089
+28,PLX4,PLX,Choroid Plexus,2502
+29,PLX4,PLX,Ependymal,2358
+30,PLX4,PLX,GABAergic,24474
+31,PLX4,PLX,Glutamatergic,59928
+32,PLX4,PLX,MB–HB-Sero–Dopa,455
+33,PLX4,PLX,Microglia,2349
+34,PLX4,PLX,Oligodendyocyte,15117
+35,PLX4,PLX,Vascular,16550
+36,PLX5,PLX,Astrocyte,17615
+37,PLX5,PLX,Choroid Plexus,2855
+38,PLX5,PLX,Ependymal,1421
+39,PLX5,PLX,GABAergic,25819
+40,PLX5,PLX,Glutamatergic,64212
+41,PLX5,PLX,MB–HB-Sero–Dopa,342
+42,PLX5,PLX,Microglia,1622
+43,PLX5,PLX,Oligodendyocyte,13526
+44,PLX5,PLX,Vascular,13404
+45,PLX6,PLX,Astrocyte,7368
+46,PLX6,PLX,Choroid Plexus,892
+47,PLX6,PLX,Ependymal,690
+48,PLX6,PLX,GABAergic,9674
+49,PLX6,PLX,Glutamatergic,26498
+50,PLX6,PLX,MB–HB-Sero–Dopa,179
+51,PLX6,PLX,Microglia,1072
+52,PLX6,PLX,Oligodendyocyte,6504
+53,PLX6,PLX,Vascular,5146
+54,PLX7,PLX,Astrocyte,7767
+55,PLX7,PLX,Choroid Plexus,1972
+56,PLX7,PLX,Ependymal,771
+57,PLX7,PLX,GABAergic,9219
+58,PLX7,PLX,Glutamatergic,24784
+59,PLX7,PLX,MB–HB-Sero–Dopa,941
+60,PLX7,PLX,Microglia,1222
+61,PLX7,PLX,Oligodendyocyte,7040
+62,PLX7,PLX,Vascular,8613
+63,PLX8,PLX,Astrocyte,13454
+64,PLX8,PLX,Choroid Plexus,1729
+65,PLX8,PLX,Ependymal,1622
+66,PLX8,PLX,GABAergic,17137
+67,PLX8,PLX,Glutamatergic,52077
+68,PLX8,PLX,MB–HB-Sero–Dopa,293
+69,PLX8,PLX,Microglia,1824
+70,PLX8,PLX,Oligodendyocyte,10448
+71,PLX8,PLX,Vascular,9391
+72,PLX9,PLX,Astrocyte,15213
+73,PLX9,PLX,Choroid Plexus,2102
+74,PLX9,PLX,Ependymal,1191
+75,PLX9,PLX,GABAergic,30629
+76,PLX9,PLX,Glutamatergic,73146
+77,PLX9,PLX,MB–HB-Sero–Dopa,348
+78,PLX9,PLX,Microglia,2405
+79,PLX9,PLX,Oligodendyocyte,11370
+80,PLX9,PLX,Vascular,11048
+81,PLX10,PLX,Astrocyte,18345
+82,PLX10,PLX,Choroid Plexus,2828
+83,PLX10,PLX,Ependymal,1512
+84,PLX10,PLX,GABAergic,26935
+85,PLX10,PLX,Glutamatergic,56583
+86,PLX10,PLX,MB–HB-Sero–Dopa,527
+87,PLX10,PLX,Microglia,1782
+88,PLX10,PLX,Oligodendyocyte,14573
+89,PLX10,PLX,Vascular,13949
+90,PLX11,PLX,Astrocyte,14564
+91,PLX11,PLX,Choroid Plexus,3334
+92,PLX11,PLX,Ependymal,1800
+93,PLX11,PLX,GABAergic,18395
+94,PLX11,PLX,Glutamatergic,58744
+95,PLX11,PLX,MB–HB-Sero–Dopa,337
+96,PLX11,PLX,Microglia,2025
+97,PLX11,PLX,Oligodendyocyte,12368
+98,PLX11,PLX,Vascular,11447
+99,PLX12,PLX,Astrocyte,18785
+100,PLX12,PLX,Choroid Plexus,2985
+101,PLX12,PLX,Ependymal,2096
+102,PLX12,PLX,GABAergic,24726
+103,PLX12,PLX,Glutamatergic,61222
+104,PLX12,PLX,MB–HB-Sero–Dopa,458
+105,PLX12,PLX,Microglia,2511
+106,PLX12,PLX,Oligodendyocyte,15714
+107,PLX12,PLX,Vascular,16235
+108,PLX13,Control,Astrocyte,18082
+109,PLX13,Control,Choroid Plexus,2511
+110,PLX13,Control,Ependymal,1613
+111,PLX13,Control,GABAergic,25062
+112,PLX13,Control,Glutamatergic,64657
+113,PLX13,Control,MB–HB-Sero–Dopa,358
+114,PLX13,Control,Microglia,10076
+115,PLX13,Control,Oligodendyocyte,16604
+116,PLX13,Control,Vascular,13767
+117,PLX14,Control,Astrocyte,17665
+118,PLX14,Control,Choroid Plexus,1656
+119,PLX14,Control,Ependymal,1925
+120,PLX14,Control,GABAergic,26091
+121,PLX14,Control,Glutamatergic,67118
+122,PLX14,Control,MB–HB-Sero–Dopa,489
+123,PLX14,Control,Microglia,7998
+124,PLX14,Control,Oligodendyocyte,11995
+125,PLX14,Control,Vascular,10771
+126,PLX15,Control,Astrocyte,21578
+127,PLX15,Control,Choroid Plexus,1630
+128,PLX15,Control,Ependymal,1634
+129,PLX15,Control,GABAergic,23913
+130,PLX15,Control,Glutamatergic,54578
+131,PLX15,Control,MB–HB-Sero–Dopa,331
+132,PLX15,Control,Microglia,16498
+133,PLX15,Control,Oligodendyocyte,15036
+134,PLX15,Control,Vascular,13900
+135,PLX16,Control,Astrocyte,8406
+136,PLX16,Control,Choroid Plexus,2009
+137,PLX16,Control,Ependymal,1036
+138,PLX16,Control,GABAergic,7646
+139,PLX16,Control,Glutamatergic,26090
+140,PLX16,Control,MB–HB-Sero–Dopa,333
+141,PLX16,Control,Microglia,5186
+142,PLX16,Control,Oligodendyocyte,6973
+143,PLX16,Control,Vascular,6417
+144,PLX17,Control,Astrocyte,16404
+145,PLX17,Control,Choroid Plexus,3780
+146,PLX17,Control,Ependymal,2441
+147,PLX17,Control,GABAergic,19954
+148,PLX17,Control,Glutamatergic,60321
+149,PLX17,Control,MB–HB-Sero–Dopa,511
+150,PLX17,Control,Microglia,6843
+151,PLX17,Control,Oligodendyocyte,14955
+152,PLX17,Control,Vascular,11213
+153,PLX18,Control,Astrocyte,17265
+154,PLX18,Control,Choroid Plexus,2706
+155,PLX18,Control,Ependymal,3435
+156,PLX18,Control,GABAergic,20021
+157,PLX18,Control,Glutamatergic,54669
+158,PLX18,Control,MB–HB-Sero–Dopa,475
+159,PLX18,Control,Microglia,8603
+160,PLX18,Control,Oligodendyocyte,14023
+161,PLX18,Control,Vascular,13446
+162,PLX19,Control,Astrocyte,14029
+163,PLX19,Control,Choroid Plexus,3642
+164,PLX19,Control,Ependymal,2197
+165,PLX19,Control,GABAergic,18432
+166,PLX19,Control,Glutamatergic,51674
+167,PLX19,Control,MB–HB-Sero–Dopa,322
+168,PLX19,Control,Microglia,6818
+169,PLX19,Control,Oligodendyocyte,10886
+170,PLX19,Control,Vascular,11187
+171,PLX20,Control,Astrocyte,17516
+172,PLX20,Control,Choroid Plexus,3411
+173,PLX20,Control,Ependymal,2894
+174,PLX20,Control,GABAergic,26224
+175,PLX20,Control,Glutamatergic,62312
+176,PLX20,Control,MB–HB-Sero–Dopa,443
+177,PLX20,Control,Microglia,8999
+178,PLX20,Control,Oligodendyocyte,14520
+179,PLX20,Control,Vascular,15339
