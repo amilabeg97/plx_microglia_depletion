@@ -2,34 +2,30 @@
 #setwd("//")
 
 suppressMessages({
-  library(tidyverse)
-  library(ggpubr)
-  library(pheatmap)
-  library(matrixStats)
-  library(readxl)
-  library(data.table)
-  library(svglite)
-  library(factoextra)
-  library(ggrepel)
-  library(clusterProfiler)
-  library(org.Mm.eg.db)
-  library(enrichplot)
-  library(VennDiagram)
-  library(ggvenn)
-  library(UpSetR)
-  library(ComplexUpset)
-  library(igraph)
-  library(ggraph)
-  library(ComplexHeatmap)
-  library(RColorBrewer)
-  library(circlize)
-  library(patchwork)
-  library(scales)
-  library(ComplexHeatmap)
-  library(circlize)
-  library(grid)
-  library(openxlsx)
-  library(purrr)
+  library("tidyverse")
+  library("ggpubr")
+  library("pheatmap")
+  library("matrixStats")
+  library("readxl")
+  library("data.table")
+  library("svglite")
+  library("factoextra")
+  library("ggrepel")
+  library("enrichplot")
+  library("VennDiagram")
+  library("ggvenn")
+  library("igraph")
+  library("ggraph")
+  library("ComplexHeatmap")
+  library("RColorBrewer")
+  library("circlize")
+  library("patchwork")
+  library("scales")
+  library("grid")
+  library("openxlsx")
+  library("purrr")
+  library("variancePartition")
+  library("limma")
 })
 
 set.seed(42)
@@ -642,26 +638,27 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
         textsize = 4
       ) +
       theme_minimal() +
-      ylim(0, 25) +
+      ylim(0, 22) +
       labs(title = gene, x = "", y = "rpmm normalized counts") +
-      theme(
-        text = element_text(family = "Helvetica", size = 14, color = "black"),
-        legend.position = "bottom",
-        legend.direction = "horizontal",
-        legend.title = element_text(size = 16, face = "bold"),
-        legend.text = element_text(size = 14),
-        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-        axis.title.y = element_text(size = 16, face = "bold"),
-        axis.text.y = element_text(size = 14, color = "black"),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()
+      theme_minimal() +
+      theme(text        = element_text(family = "Helvetica", size = 8, color = "black"),
+            legend.position = "bottom", 
+            legend.direction = "horizontal",
+            legend.title    = element_text(size = 10, face = "bold"),
+            legend.text     = element_text(size = 8),
+            legend.box.spacing = unit(0.1, "cm"),
+            plot.title      = element_text(size = 10, face = "bold", hjust = 0.5),
+            axis.title.y    = element_text(size = 10, face = "bold"),
+            axis.text.y     = element_text(size = 8, color = "black"),
+            axis.text.x     = element_text(size = 1, color = "white"),
+            axis.ticks.x    = element_blank()
       )
   })
 
 plots_with_stats_small_rna
 
 # Save the plots
-#pdf("Figures and plots/miRNA_barplots_small_rna.pdf", width = 6, height = 7)
+#pdf("Figures and plots/miRNA_barplots_small_rna.pdf", width = 4, height = 4)
 # for(i in seq_along(plots_with_stats_small_rna)) {
 #   print(plots_with_stats_small_rna[[i]])
 # }
@@ -1196,13 +1193,12 @@ export_table2_all_mirnas <- function() {
 
 # ---------------------- miRNA expression across brainstem (PMID 32188880) ----------------------
 mirna_set <- c(
-  "miR-223-3p"  = "mmu_miR_223_002295",
-  "miR-146a-5p" = "mmu_miR_146a_000468",
-  "miR-153-3p"  = "mmu_miR_153_001191",
-  "miR-142a-5p"  = "mmu_miR_142_5p_002248",
   "miR-142a-3p"  = "mmu_miR_142_3p_000464",
+  "miR-142a-5p"  = "mmu_miR_142_5p_002248",
+  "miR-146a-5p" = "mmu_miR_146a_000468",
   "miR-200a-3p"  = "mmu_miR_200a_000502",
   "miR-205-5p"  = "mmu_miR_205_000509",
+  "miR-223-3p"  = "mmu_miR_223_002295",
   "miR-409-3p" = "mmu_miR_409_3p_002332",
   "miR-433-5p" = "mmu_miR_433_5p_001078"
 )
@@ -1391,3 +1387,247 @@ print(venn_labeled)
 
 #ggsave("Figures and plots/PNGs/mirna_overlap_three_set_labeled.png", venn_labeled, width = 8, height = 6)
 #ggsave("Figures and plots/PDFs/mirna_overlap_three_set_labeled.pdf", venn_labeled, width = 8, height = 6)
+
+# ---------------------- miRNA biological variability ----------------------
+# Expression matrix
+mirna_mat <- data_mmu %>%
+  as.data.frame() %>%
+  { rownames(.) <- .$RNA; . } %>%
+  dplyr::select(-RNA) %>%
+  as.matrix()
+
+mirna_mat <- log2(mirna_mat + 1)
+
+expressed_mirnas <- rowMeans(mirna_mat) > log2(1 + 1) &
+  matrixStats::rowVars(mirna_mat) > 0
+mirna_mat <- mirna_mat[expressed_mirnas, , drop = FALSE]
+cat(sprintf("Variance partition: %d miRNAs x %d samples retained\n",
+            nrow(mirna_mat), ncol(mirna_mat)))
+
+# Sample metadata
+sample_info <- data.frame(
+  Sample     = colnames(mirna_mat),
+  Region     = sapply(colnames(mirna_mat), get_region),
+  Sample_Num = sapply(colnames(mirna_mat), get_sample_num),
+  stringsAsFactors = FALSE
+)
+
+group_assignments      <- t(mapply(assign_treatment_sex,
+                                   sample_info$Region,
+                                   sample_info$Sample_Num))
+sample_info$Treatment  <- group_assignments[, 1]
+sample_info$Sex        <- group_assignments[, 2]
+sample_info$Animal     <- factor(paste0("M", sample_info$Sample_Num))
+sample_info$Region     <- factor(sample_info$Region)
+sample_info$Treatment  <- factor(sample_info$Treatment, levels = c("Control", "PLX"))
+sample_info$Sex        <- factor(sample_info$Sex,       levels = c("Female", "Male"))
+
+rownames(sample_info) <- sample_info$Sample
+sample_info <- sample_info[colnames(mirna_mat), ]
+stopifnot(identical(rownames(sample_info), colnames(mirna_mat)))
+
+cat("\nAnimal x Region table (should be ~1 per cell):\n")
+print(table(sample_info$Animal, sample_info$Region))
+cat("\nAnimal -> Sex/Treatment (must be 1:1):\n")
+print(unique(sample_info[, c("Animal", "Sex", "Treatment")]) %>% arrange(Animal))
+
+# Colors to use for plotting
+VPART_COLORS <- c(
+  Region    = "#8b3a7a",
+  Animal    = "#538f8f",
+  Treatment = "#b07d2a",
+  Sex       = "#a42e30",
+  Residuals = "#d3d3d3"
+)
+
+VPART_THEME <- theme_minimal(base_family = "Helvetica") +
+  theme(
+    plot.title        = element_text(size = 14, face = "bold",   hjust = 0.5),
+    plot.subtitle     = element_text(size = 11, hjust = 0.5, color = "grey40"),
+    axis.text         = element_text(size = 12, color = "black"),
+    axis.title.y      = element_text(size = 13, face = "bold"),
+    panel.border      = element_blank(),
+    panel.grid.major  = element_line(color = "grey92"),
+    panel.grid.minor  = element_blank(),
+    legend.position   = "none"
+  )
+
+### Global partition: all regions
+formula_all  <- ~ (1|Region) + (1|Sex) + (1|Treatment) + (1|Animal)
+vpart_all    <- fitExtractVarPartModel(mirna_mat, formula_all, sample_info)
+vpart_all    <- sortCols(vpart_all)
+
+cat("\n=== Global variance partition (median % across miRNAs) ===\n")
+print(round(sort(colMeans(vpart_all) * 100, decreasing = TRUE), 2))
+
+p_vpart_all <- plotVarPart(vpart_all,
+                           col = VPART_COLORS[colnames(vpart_all)]) +
+  labs(title    = "miRNA variance partition — all brain regions",
+       y        = "Variance explained (%)") +
+  VPART_THEME
+
+print(p_vpart_all)
+
+### Region-removed partition
+mirna_mat_regionout <- removeBatchEffect(mirna_mat, batch = sample_info$Region)
+
+variable_after_resid  <- matrixStats::rowVars(mirna_mat_regionout) > 0
+mirna_mat_regionout   <- mirna_mat_regionout[variable_after_resid, , drop = FALSE]
+cat(sprintf("\nRegion-removed matrix: %d miRNAs x %d samples\n",
+            nrow(mirna_mat_regionout), ncol(mirna_mat_regionout)))
+
+formula_noregion  <- ~ (1|Sex) + (1|Treatment) + (1|Animal)
+vpart_noregion    <- fitExtractVarPartModel(mirna_mat_regionout,
+                                            formula_noregion, sample_info)
+vpart_noregion    <- sortCols(vpart_noregion)
+
+cat("\n=== Region-removed variance partition (median % across miRNAs) ===\n")
+print(round(sort(colMeans(vpart_noregion) * 100, decreasing = TRUE), 2))
+
+p_vpart_noregion <- plotVarPart(vpart_noregion,
+                                col = VPART_COLORS[colnames(vpart_noregion)]) +
+  labs(title    = "miRNA variance partition — region effect removed",
+       y        = "Variance explained (%)") +
+  VPART_THEME
+
+print(p_vpart_noregion)
+
+### Save
+#ggsave("Figures and plots/PNGs/VarPart_miRNA_global.png", p_vpart_all, width = 8, height = 6, dpi = 300)
+#ggsave("Figures and plots/PDFs/VarPart_miRNA_global.pdf", p_vpart_all, width = 8, height = 6)
+#ggsave("Figures and plots/PNGs/VarPart_miRNA_regionremoved.png", p_vpart_noregion, width = 8, height = 6, dpi = 300)
+#ggsave("Figures and plots/PDFs/VarPart_miRNA_regionremoved.pdf", p_vpart_noregion, width = 8, height = 6)
+
+# ---------------------- Combined FC plot: study depletion effect x Pomper cell-type enrichment ----------------------
+mirna_order <- names(mirna_set)
+
+### Build Pomper matrix
+pomper_matrix_df <- map_dfr(names(mirna_set), function(mirna_name) {
+  primer_id <- mirna_set[[mirna_name]]
+  df <- tryCatch(extract_mirna(primer_id), error = function(e) NULL)
+  if (is.null(df)) return(NULL)
+  df %>% mutate(miRNA = mirna_name)
+})
+
+pomper_matrix <- pomper_matrix_df %>%
+  mutate(log2FC = ifelse(detected, log2(fold), NA_real_)) %>%
+  dplyr::select(miRNA, cell_type, log2FC) %>%
+  pivot_wider(names_from = cell_type, values_from = log2FC) %>%
+  column_to_rownames("miRNA")
+
+# Fix column order and row order
+pomper_matrix <- pomper_matrix[mirna_order, cell_type_map$cell_type]
+pomper_matrix <- as.matrix(pomper_matrix)
+
+# Build study depletion matrix
+region_sex_cols <- expand.grid(
+  Region = c("Bregma -2.06", "Olfactory Bulb", "Caudate Putamen", "Cerebellum"),
+  Sex = c("M", "F"),
+  stringsAsFactors = FALSE
+) %>% mutate(col_label = paste0(Region, "_", Sex))
+
+study_matrix_df <- all_mirna_full %>%
+  mutate(miRNA_clean = strip_mmu(miRNA)) %>%
+  filter(miRNA_clean %in% mirna_order) %>%
+  mutate(col_label = paste0(Region, "_", Sex))
+
+study_matrix <- study_matrix_df %>%
+  dplyr::select(miRNA_clean, col_label, log2FC) %>%
+  pivot_wider(names_from = col_label, values_from = log2FC) %>%
+  column_to_rownames("miRNA_clean")
+
+study_matrix <- study_matrix[mirna_order, region_sex_cols$col_label]
+study_matrix <- as.matrix(study_matrix)
+
+# Significance mask (raw p < 0.05, matching your main-figure convention)
+sig_matrix_df <- study_matrix_df %>%
+  dplyr::select(miRNA_clean, col_label, Significant_raw) %>%
+  pivot_wider(names_from = col_label, values_from = Significant_raw)
+
+sig_matrix <- sig_matrix_df %>%
+  column_to_rownames("miRNA_clean")
+sig_matrix <- sig_matrix[mirna_order, region_sex_cols$col_label]
+sig_matrix <- as.matrix(sig_matrix)
+sig_matrix[is.na(sig_matrix)] <- FALSE
+
+### Column annotation for the study block (Region + Sex)
+study_col_ha <- HeatmapAnnotation(
+  Region = region_sex_cols$Region,
+  Sex    = ifelse(region_sex_cols$Sex == "M", "Male", "Female"),
+  col = list(
+    Region = region_colors,
+    Sex    = sex_colors
+  ),
+  show_annotation_name = FALSE,
+  annotation_legend_param = list(
+    Region = list(title_gp = gpar(fontsize = 12, fontface = "bold"), labels_gp = gpar(fontsize = 10)),
+    Sex    = list(title_gp = gpar(fontsize = 12, fontface = "bold"), labels_gp = gpar(fontsize = 10))
+  )
+)
+
+#Color scales
+pomper_col_fun <- colorRamp2(
+  c(0, max(pomper_matrix, na.rm = TRUE) / 2, max(pomper_matrix, na.rm = TRUE)),
+  c("white", "#6ca2a7", "#2E5560")
+)
+
+study_max <- max(abs(study_matrix), na.rm = TRUE)
+study_col_fun <- colorRamp2(
+  c(-study_max, 0, study_max),
+  c("#254e7a", "white", "#8b3a7a")
+)
+
+### Build the two heatmaps
+ht_pomper <- Heatmap(
+  pomper_matrix,
+  name = "log2FC\n(vs Brainstem)",
+  col = pomper_col_fun,
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  row_names_side = "left",
+  row_names_gp = gpar(fontface = "italic", fontsize = 10),
+  column_names_rot = 40,
+  column_names_gp = gpar(fontsize = 10),
+  column_title = "Cell-type enrichment\n(Pomper et al.)",
+  column_title_gp = gpar(fontsize = 10, fontface = "bold"),
+  na_col = "grey90",
+  border = TRUE,
+  rect_gp = gpar(col = "white", lwd = 1),
+  heatmap_legend_param = list(title_gp = gpar(fontsize = 10, fontface = "bold"),
+                              labels_gp = gpar(fontsize = 8))
+)
+
+ht_study <- Heatmap(
+  study_matrix,
+  name = "log2FC\n(PLX vs Control)",
+  col = study_col_fun,
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  show_row_names = FALSE,
+  show_column_names = FALSE,
+  top_annotation = study_col_ha,
+  column_title = "Depletion effect (this study)",
+  column_title_gp = gpar(fontsize = 10, fontface = "bold"),
+  na_col = "grey90",
+  border = TRUE,
+  rect_gp = gpar(col = "white", lwd = 1),
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    if (!is.na(sig_matrix[i, j]) && sig_matrix[i, j]) {
+      grid.text("*", x, y, gp = gpar(fontsize = 16, fontface = "bold", col = "black"))
+    }
+  },
+  heatmap_legend_param = list(title_gp = gpar(fontsize = 10, fontface = "bold"),
+                              labels_gp = gpar(fontsize = 8))
+)
+
+# Combine and draw
+combined_ht <- ht_pomper + ht_study
+
+#pdf("Figures and plots/PDFs/miRNA_celltype_depletion_heatmap.pdf", width = 6, height = 8)
+draw(combined_ht,
+     column_title_gp = gpar(fontsize = 15, fontface = "bold"),
+     merge_legend = TRUE,
+     heatmap_legend_side = "right",
+     annotation_legend_side = "right")
+#dev.off()
+
