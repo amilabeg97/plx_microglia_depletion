@@ -1,4 +1,3 @@
-# Setting the working directory and importing libraries
 #setwd("//")
 
 suppressMessages({
@@ -26,9 +25,11 @@ suppressMessages({
   library("purrr")
   library("variancePartition")
   library("limma")
+  library("eulerr")
 })
 
 set.seed(42)
+
 
 # ---------------------- Define Color Schemes (Global) ----------------------
 point_colors <- c(Control_M = "#d4751a", Control_F = "#d4751a",
@@ -39,16 +40,16 @@ treatment_colors <- c("Control" = "#d4751a", "PLX" = "#8b3a7a")
 sex_colors <- c("Male" = "#254e7a", "Female" = "#a42e30")
 
 region_colors <- c("Bregma -2.06" = "#b07d2a",
-                   "Olfactory Bulb" = "#9e4d8c", 
+                   "Olfactory Bulb" = "#9e4d8c",
                    "Caudate Putamen" = "#2e7b82",
                    "Cerebellum" = "#2e8c61")
 
-point_labels <- c("Control_M" = "Control M", "Control_F" = "Control F", 
+point_labels <- c("Control_M" = "Control M", "Control_F" = "Control F",
                   "PLX_M" = "PLX M", "PLX_F" = "PLX F")
 
 ncRNA_colors <- c(
   "#a3834c",  # tRNA
-  "#a0cbe8",  # miRNA 
+  "#a0cbe8",  # miRNA
   "#1D6B5A",  # snRNA
   "#bab0ac",  # snoRNA
   "#DDCC77",  # scaRNA
@@ -57,57 +58,45 @@ ncRNA_colors <- c(
   "#589f70"   # lncRNA
 )
 
-regions <- list(
-  S = "Bregma -2.06",
-  OB = "Olfactory Bulb",
-  CP = "Caudate Putamen",
-  CE = "Cerebellum"
-)
+regions <- list(S = "Bregma -2.06", OB = "Olfactory Bulb",
+                CP = "Caudate Putamen", CE = "Cerebellum")
 
 # ---------------------- Load data miRNA ----------------------
 ### Depletion study data load
-data <- read.table("Input files/sncRNA_complete_quantification_rpmm_norm.csv", 
+data <- read.table("Input files/sncRNA_complete_quantification_rpmm_norm.csv",
                    header = TRUE, sep = "\t")
 
-colnames(data) <- c(
-  "RNA", "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16",  
-  "S9", "S10", "S11", "S17", "S12", "S13", "S14", "S18", "S1", "S2",    
-  "S3", "OB17", "OB4", "OB5", "OB8", "OB9", "OB10", "OB18", "OB11", "OB12",  
-  "OB13", "OB19", "OB14", "OB15", "OB16", "OB20", "OB1", "OB2", "OB3", "CP16",
-  "CP4", "CP5", "CP6", "CP7", "CP8", "CP20", "CP17", "CP10", "CP11", "CP12",  
-  "CP13", "CP18", "CP14", "CP15", "CP19", "CP1", "CP2", "CP3", "CE15", "CE4",
-  "CE5", "CE6", "CE7", "CE8", "CE19", "CE20", "CE16", "CE9", "CE10", "CE11", 
-  "CE12", "CE13", "CE17", "CE14", "CE18", "CE1", "CE2", "CE3")
+sample_names <- c(
+  "RNA",
+  "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16",
+  "S9", "S10", "S11", "S17", "S12", "S13", "S14", "S18", "S1", "S2", "S3",
+  "OB17", "OB4", "OB5", "OB8", "OB9", "OB10", "OB18", "OB11", "OB12",
+  "OB13", "OB19", "OB14", "OB15", "OB16", "OB20", "OB1", "OB2", "OB3",
+  "CP16", "CP4", "CP5", "CP6", "CP7", "CP8", "CP20", "CP17", "CP10", "CP11",
+  "CP12", "CP13", "CP18", "CP14", "CP15", "CP19", "CP1", "CP2", "CP3",
+  "CE15", "CE4", "CE5", "CE6", "CE7", "CE8", "CE19", "CE20", "CE16",
+  "CE9", "CE10", "CE11", "CE12", "CE13", "CE17", "CE14", "CE18",
+  "CE1", "CE2", "CE3")
 
+colnames(data) <- sample_names
 data_mmu <- data[grep("mmu-miR-", data$RNA), ]
-
-colnames(data_mmu) <- c(
-  "RNA", "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16",  
-  "S9", "S10", "S11", "S17", "S12", "S13", "S14", "S18", "S1", "S2",    
-  "S3", "OB17", "OB4", "OB5", "OB8", "OB9", "OB10", "OB18", "OB11", "OB12",  
-  "OB13", "OB19", "OB14", "OB15", "OB16", "OB20", "OB1", "OB2", "OB3", "CP16",
-  "CP4", "CP5", "CP6", "CP7", "CP8", "CP20", "CP17", "CP10", "CP11", "CP12",  
-  "CP13", "CP18", "CP14", "CP15", "CP19", "CP1", "CP2", "CP3", "CE15", "CE4",
-  "CE5", "CE6", "CE7", "CE8", "CE19", "CE20", "CE16", "CE9", "CE10", "CE11", 
-  "CE12", "CE13", "CE17", "CE14", "CE18", "CE1", "CE2", "CE3")
 
 miRNAs_of_interest <- c("mmu-miR-146a-5p", "mmu-miR-223-3p")
 
 diff_express_gender_specific_75per <- read.table(
-  "snc-pipeline/plx_microglia_gender_specific_75%/diff_exp/miRNA/rpmm_norm_log2.detection_rate_75p_per_group/diff_exp_gender_specific_75per.csv", 
+  "snc-pipeline/plx_microglia_gender_specific_75%/diff_exp/miRNA/rpmm_norm_log2.detection_rate_75p_per_group/diff_exp_gender_specific_75per.csv",
   header = TRUE, sep = "\t"
 )
 
-### Pomper database
+# Pomper database
 xlsx_pomper_database <- "Input files/LoessM_norm_miRNA_array_WEBSITE_final.xlsx"
 out_dir   <- "Figures and plots/miRNA_brainstem_plots"
 bar_color <- "#2E5560"
 
-### Load the diff_exp table from two external datasets
+# External validation datasets
 diff_exp_external <- read.table(
   "Input files/results_plx_walsh_microglia/diff_exp/miRNA/rpmm_norm_log2.detection_rate_75p_per_group/diff_exp.csv",
-  header = TRUE, sep = "\t", check.names = FALSE,
-  stringsAsFactors = FALSE
+  header = TRUE, sep = "\t", check.names = FALSE
 )
 
 strip_mmu <- function(x) sub("^mmu-", "", x)
@@ -115,30 +104,30 @@ strip_mmu <- function(x) sub("^mmu-", "", x)
 # ---------------------- Sample Groups Definition ----------------------
 ### Sample-to-group (treatment x sex) assignment within each region
 all_samples_columns_small_rna <- list(
-  Control_M = c("S17", "S18", "S19", "S20"), 
-  PLX_M = c("S7", "S8", "S9", "S10", "S11", "S12"), 
-  Control_F = c("S13", "S14", "S15", "S16"), 
+  Control_M = c("S17", "S18", "S19", "S20"),
+  PLX_M = c("S7", "S8", "S9", "S10", "S11", "S12"),
+  Control_F = c("S13", "S14", "S15", "S16"),
   PLX_F = c("S1", "S2", "S3", "S4", "S5", "S6")
 )
 
 all_samples_columns_olfactory_bulb <- list(
-  Control_M = c("OB17", "OB18", "OB19", "OB20"), 
-  PLX_M = c("OB8", "OB9", "OB10", "OB11", "OB12"), 
-  Control_F = c("OB13", "OB14", "OB15", "OB16"), 
+  Control_M = c("OB17", "OB18", "OB19", "OB20"),
+  PLX_M = c("OB8", "OB9", "OB10", "OB11", "OB12"),
+  Control_F = c("OB13", "OB14", "OB15", "OB16"),
   PLX_F = c("OB1", "OB2", "OB3", "OB4", "OB5")
 )
 
 all_samples_columns_caudate_putamen <- list(
-  Control_M = c("CP17", "CP18", "CP19", "CP20"), 
-  PLX_M = c("CP7", "CP8", "CP10", "CP11", "CP12"), 
-  Control_F = c("CP13", "CP14", "CP15", "CP16"), 
+  Control_M = c("CP17", "CP18", "CP19", "CP20"),
+  PLX_M = c("CP7", "CP8", "CP10", "CP11", "CP12"),
+  Control_F = c("CP13", "CP14", "CP15", "CP16"),
   PLX_F = c("CP1", "CP2", "CP3", "CP4", "CP5", "CP6")
 )
 
 all_samples_columns_cerebellum <- list(
-  Control_M = c("CE17", "CE18", "CE19", "CE20"), 
-  PLX_M = c("CE7", "CE8", "CE9", "CE10", "CE11", "CE12"), 
-  Control_F = c("CE13", "CE14", "CE15", "CE16"), 
+  Control_M = c("CE17", "CE18", "CE19", "CE20"),
+  PLX_M = c("CE7", "CE8", "CE9", "CE10", "CE11", "CE12"),
+  Control_F = c("CE13", "CE14", "CE15", "CE16"),
   PLX_F = c("CE1", "CE2", "CE3", "CE4", "CE5", "CE6")
 )
 
@@ -158,66 +147,43 @@ process_brain_region <- function(data, sample_groups) {
 # ---------------------- QC Brain region correlation analysis ----------------------
 corr_data <- read.csv("Input files/sample_correlation.spearman.csv", sep = "\t")
 
-# Helper functions
 get_region <- function(sample_id) {
-  if (grepl("^S[0-9]", sample_id)) return("Bregma -2.06")
-  if (grepl("^OB", sample_id)) return("Olfactory Bulb")
-  if (grepl("^CP", sample_id)) return("Caudate Putamen")
-  if (grepl("^CE", sample_id)) return("Cerebellum")
-  return("Unknown")
+  if (grepl("^S[0-9]", sample_id))  return("Bregma -2.06")
+  if (grepl("^OB", sample_id))      return("Olfactory Bulb")
+  if (grepl("^CP", sample_id))      return("Caudate Putamen")
+  if (grepl("^CE", sample_id))      return("Cerebellum")
+  "Unknown"
 }
 
 assign_treatment_sex <- function(region, sample_num) {
   treatment <- if (sample_num <= 12) "PLX" else "Control"
   sex <- if (sample_num <= 6 || (sample_num >= 13 && sample_num <= 16)) "Female" else "Male"
-  
-  return(c(treatment, sex))
-}
-
-### Sanity check that the samples are correctly labeled
-cat("Sample 1-6 (should be PLX Female):\n")
-for (i in 1:6) {
-  result <- assign_treatment_sex("Any Region", i)
-  cat(sprintf("  Sample %d: %s %s\n", i, result[1], result[2]))
-}
-
-cat("\nSample 7-12 (should be PLX Male):\n")
-for (i in 7:12) {
-  result <- assign_treatment_sex("Any Region", i)
-  cat(sprintf("  Sample %d: %s %s\n", i, result[1], result[2]))
-}
-
-cat("\nSample 13-16 (should be Control Female):\n")
-for (i in 13:16) {
-  result <- assign_treatment_sex("Any Region", i)
-  cat(sprintf("  Sample %d: %s %s\n", i, result[1], result[2]))
-}
-
-cat("\nSample 17-20 (should be Control Male):\n")
-for (i in 17:20) {
-  result <- assign_treatment_sex("Any Region", i)
-  cat(sprintf("  Sample %d: %s %s\n", i, result[1], result[2]))
+  c(treatment, sex)
 }
 
 get_sample_num <- function(sample_id) {
-  num <- gsub("^[A-Z]+", "", sample_id)
-  return(as.numeric(num))
+  as.numeric(gsub("^[A-Z]+", "", sample_id))
+}
+
+# Sanity check on group assignment
+for (range_label in list(c(1, 6, "PLX Female"), c(7, 12, "PLX Male"),
+                         c(13, 16, "Control Female"), c(17, 20, "Control Male"))) {
+  cat(sprintf("Sample %s-%s (expect %s):\n", range_label[1], range_label[2], range_label[3]))
+  for (i in seq(as.integer(range_label[1]), as.integer(range_label[2]))) {
+    r <- assign_treatment_sex("Any", i)
+    cat(sprintf("  %d: %s %s\n", i, r[1], r[2]))
+  }
 }
 
 all_samples <- colnames(corr_data)
 sample_regions <- sapply(all_samples, get_region)
 
-#cat("Sample distribution across regions:\n")
-#print(table(sample_regions))
-
 corr_matrix_full <- as.matrix(corr_data)
 
 # Color scheme
-col_fun <- colorRamp2(c(0.85, 0.90, 0.95, 1.0), 
+col_fun <- colorRamp2(c(0.85, 0.90, 0.95, 1.0),
                       c("#9ECAE1", "#4292C6", "#08519C", "#08306B"))
 
-
-### Get metadata for all samples
 all_metadata <- data.frame(
   Sample = all_samples,
   Region = sample_regions,
@@ -233,7 +199,6 @@ for (i in 1:nrow(all_metadata)) {
   all_metadata$Treatment[i] <- assignment[1]
   all_metadata$Sex[i] <- assignment[2]
 }
-
 
 # Top annotation
 ha_top_all <- HeatmapAnnotation(
@@ -253,7 +218,7 @@ ha_top_all <- HeatmapAnnotation(
       labels_gp = gpar(fontsize = 13)
     ),
     Treatment = list(
-      title = "Treatment", 
+      title = "Treatment",
       title_gp = gpar(fontsize = 15, fontface = "bold"),
       labels_gp = gpar(fontsize = 13)
     ),
@@ -284,26 +249,20 @@ ht_all <- Heatmap(
   corr_matrix_full,
   name = "Spearman\nCorrelation",
   col = col_fun,
-  
   column_title = "Brain Regions - Sample Correlation",
   column_title_gp = gpar(fontsize = 16, fontface = "bold"),
-  
   cluster_rows = TRUE,
   cluster_columns = TRUE,
   clustering_distance_rows = "euclidean",
   clustering_distance_columns = "euclidean",
   clustering_method_rows = "ward.D2",
   clustering_method_columns = "ward.D2",
-  
   show_row_names = FALSE,
   show_column_names = FALSE,
-  
   top_annotation = ha_top_all,
   left_annotation = ha_left_all,
-  
   border = TRUE,
   rect_gp = gpar(col = "white", lwd = 0.5),
-  
   heatmap_legend_param = list(
     title = "Spearman\nCorrelation",
     title_gp = gpar(fontsize = 14, fontface = "bold", fontfamily = "Helvetica"),
@@ -314,13 +273,11 @@ ht_all <- Heatmap(
   )
 )
 
-### Save the heatmap
 #pdf("Figures and plots/PDFs/All_Regions_Single_correlation_heatmap.pdf", width = 11, height = 13)
 #draw(ht_all, heatmap_legend_side = "right", annotation_legend_side = "right")
 #dev.off()
 
 # ---------------------- QC Number of mapped lncRNAs ----------------------
-### Read the QC data
 qc_data <- read.csv("Input files/qc_table.biol.csv", sep = "\t")
 
 ncRNA_names <- c("tRNA", "miRNA", "snRNA", "snoRNA", "scaRNA", "rRNA", "miscRNA", "lncRNA")
@@ -336,11 +293,10 @@ qc_data$Sample_Number <- sapply(qc_data$Sample_ID, get_sample_num)
 
 ### Assign treatment and sex
 assignments <- t(mapply(assign_treatment_sex, qc_data$Region, qc_data$Sample_Number))
-qc_data$Treatment <- assignments[,1]
-qc_data$Sex <- assignments[,2]
+qc_data$Treatment <- assignments[, 1]
+qc_data$Sex <- assignments[, 2]
 qc_data$Group <- paste(qc_data$Treatment, qc_data$Sex, sep = "_")
 
-# ncRNA mapping variables (one column per ncRNA type)
 ncRNA_vars <- c(
   "total_mapped_tRNA",
   "total_mapped_to_precursor_or_miRNA",
@@ -371,7 +327,6 @@ create_complete_region_data <- function(region_name, qc_data, ncRNA_matrix) {
   rownames(complete_matrix) <- colnames(ncRNA_matrix)
   colnames(complete_matrix) <- paste0("Sample", 1:20)
   
-  # Place each existing sample at its own position 
   for (i in 1:nrow(region_qc)) {
     sample_num <- region_qc$Sample_Number[i]
     complete_data$Treatment[sample_num] <- region_qc$Treatment[i]
@@ -382,7 +337,7 @@ create_complete_region_data <- function(region_name, qc_data, ncRNA_matrix) {
   return(list(metadata = complete_data, matrix = complete_matrix))
 }
 
-# Shared y-axis max across all regions
+# Shared y-axis across all regions
 global_ymax <- 0
 for (region in regions) {
   idx <- which(qc_data$Region == region)
@@ -396,10 +351,8 @@ for (region in regions) {
 global_ymax <- global_ymax * 1.15
 cat("Global y-axis maximum:", global_ymax, "\n")
 
-### Create plot by region - vertical layout
 #pdf("Figures and plots/PDFs/ncRNA_mapping_by_region_improved.pdf", width = 8, height = 11)
 
-# Four region panels stacked vertically + 1 legend at the bottom
 layout(matrix(c(1, 2, 3, 4, 5), nrow = 5, ncol = 1),
        heights = c(1, 1, 1, 1, 0.25))
 
@@ -420,11 +373,9 @@ for (i in seq_along(regions)) {
   empty_bars <- which(is.na(region_meta$Treatment))
   filled_bars <- which(!is.na(region_meta$Treatment))
   
-  # Bar width from a dry-run barplot, needed to size the annotation rectangles below
   test_bp <- barplot(region_data[1,], plot = FALSE, space = 0.35)
   bar_width <- diff(test_bp)[1] / 1.35
   
-  # Open an empty plotting region first so gridlines can be drawn behind the bars
   plot.new()
   plot.window(xlim = range(test_bp) + c(-0.5, 0.5), ylim = c(0, global_ymax))
   
@@ -434,7 +385,6 @@ for (i in seq_along(regions)) {
   abline(h = y_gridlines, col = "gray90", lty = "solid", lwd = 0.5)
   
   title(main = region, cex.main = 1.5, font.main = 2, line = 1.5)
-
   axis(2, las = 1, cex.axis = 1)
   mtext("Total Mapped Reads", side = 2, line = 4.5, cex = 1, font = 2)
   
@@ -453,7 +403,7 @@ for (i in seq_along(regions)) {
     names.arg = rep("", ncol(region_data)),
     add = TRUE
   )
-
+  
   axis(1, at = bp, labels = 1:20, las = 1, cex.axis = 0.8, tick = FALSE, line = -0.5)
   
   # Annotation strip positions, just below the x-axis (treatment row above sex row)
@@ -463,7 +413,7 @@ for (i in seq_along(regions)) {
   sex_bottom <- treatment_bottom - (0.05 * global_ymax)
   sex_top <- sex_bottom + (0.03 * global_ymax)
   
-  par(xpd = TRUE) # allow drawing into the margin below the plot
+  par(xpd = TRUE)
   
   # Treatment color strip (filled bars only)
   for (bar_idx in filled_bars) {
@@ -503,7 +453,7 @@ for (i in seq_along(regions)) {
       )
     }
   }
-
+  
   par(xpd = FALSE)
 }
 
@@ -513,12 +463,11 @@ plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c
 
 par(xpd = TRUE)
 
-# Three legends in the bottom panel: ncRNA type, sex, treatment
 legend(
   x = "right",
   inset = c(0, 0),
-  legend = c("lncRNA","miscRNA","rRNA","scaRNA",
-             "snoRNA","snRNA","miRNA","tRNA"),
+  legend = c("lncRNA", "miscRNA", "rRNA", "scaRNA",
+             "snoRNA", "snRNA", "miRNA", "tRNA"),
   fill = rev(ncRNA_colors),
   title = "ncRNA Type",
   cex = 1.1,
@@ -564,20 +513,19 @@ legend(
 #dev.off()
 
 # ---------------------- Process Brain Regions ----------------------
-
-small_rna_main_results <- process_brain_region(data_mmu[, c(1, 2:21)], 
+small_rna_main_results <- process_brain_region(data_mmu[, c(1, 2:21)],
                                                all_samples_columns_small_rna)
-olfactory_bulb_results <- process_brain_region(data_mmu[, c(1, 22:39)], 
+olfactory_bulb_results <- process_brain_region(data_mmu[, c(1, 22:39)],
                                                all_samples_columns_olfactory_bulb)
-caudate_putamen_results <- process_brain_region(data_mmu[, c(1, 40:58)], 
+caudate_putamen_results <- process_brain_region(data_mmu[, c(1, 40:58)],
                                                 all_samples_columns_caudate_putamen)
-cerebellum_results <- process_brain_region(data_mmu[, c(1, 59:78)], 
+cerebellum_results <- process_brain_region(data_mmu[, c(1, 59:78)],
                                            all_samples_columns_cerebellum)
 
 # ---------------------- Bar Plots - Small RNA (Bregma -2.06) ----------------------
 # Define sample columns to keep for data
 columns_of_interest_with_data_points_small_rna <- c(
-  "RNA", "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16", 
+  "RNA", "S15", "S4", "S5", "S6", "S7", "S8", "S19", "S20", "S16",
   "S9", "S10", "S11", "S17", "S12", "S13", "S14", "S18", "S1", "S2", "S3"
 )
 
@@ -623,11 +571,11 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
     
     ggplot(df, aes(x = Treatment, y = Value, fill = Treatment_Simple)) +
       geom_bar(stat = "summary", fun = "mean", position = position_dodge(width = 0.9), width = 0.6) +
-      geom_errorbar(stat = "summary", fun.data = mean_se, 
+      geom_errorbar(stat = "summary", fun.data = mean_se,
                     position = position_dodge(width = 0.9), width = 0.2) +
       geom_vline(xintercept = 2.5, linetype = "dashed", color = "#dddddd", linewidth = 0.7) +
       geom_jitter(color = "black",
-                  position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.85), 
+                  position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.85),
                   alpha = 0.6, size = 2, show.legend = FALSE) +
       scale_fill_manual(values = treatment_colors, name = "Treatment") +
       ggsignif::geom_signif(
@@ -641,15 +589,15 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
       ylim(0, 22) +
       labs(title = gene, x = "", y = "rpmm normalized counts") +
       theme_minimal() +
-      theme(text        = element_text(family = "Helvetica", size = 8, color = "black"),
-            legend.position = "bottom", 
+      theme(text        = element_text(family = "Helvetica", size = 14, color = "black"),
+            legend.position = "bottom",
             legend.direction = "horizontal",
-            legend.title    = element_text(size = 10, face = "bold"),
-            legend.text     = element_text(size = 8),
+            legend.title    = element_text(size = 16, face = "bold"),
+            legend.text     = element_text(size = 14),
             legend.box.spacing = unit(0.1, "cm"),
-            plot.title      = element_text(size = 10, face = "bold", hjust = 0.5),
-            axis.title.y    = element_text(size = 10, face = "bold"),
-            axis.text.y     = element_text(size = 8, color = "black"),
+            plot.title      = element_text(size = 16, face = "bold", hjust = 0.5),
+            axis.title.y    = element_text(size = 14, face = "bold"),
+            axis.text.y     = element_text(size = 12, color = "black"),
             axis.text.x     = element_text(size = 1, color = "white"),
             axis.ticks.x    = element_blank()
       )
@@ -657,9 +605,8 @@ plots_with_stats_small_rna <- df_with_outliers_small_rna %>%
 
 plots_with_stats_small_rna
 
-# Save the plots
-#pdf("Figures and plots/miRNA_barplots_small_rna.pdf", width = 4, height = 4)
-# for(i in seq_along(plots_with_stats_small_rna)) {
+#pdf("Figures and plots/miRNA_barplots_small_rna.pdf", width = 5, height = 7)
+#for(i in seq_along(plots_with_stats_small_rna)) {
 #   print(plots_with_stats_small_rna[[i]])
 # }
 #dev.off()
@@ -787,7 +734,6 @@ make_mirna_regional_plots <- function(diff_express_df,
       legend.text     = element_text(size = 16)
     )
   
-  ### Paired bar plot
   mirna_counts <- all_region_data %>%
     filter(Significant) %>%
     group_by(Region, Sex) %>%
@@ -829,7 +775,7 @@ make_mirna_regional_plots <- function(diff_express_df,
       y = "Number of Deregulated miRNAs (PLX vs Control)",
       fill = "Sex"
     ) +
-    ylim(0,10) +
+    ylim(0, 10) +
     theme_minimal() +
     theme(
       text             = element_text(family = "Helvetica", size = 12, color = "black"),
@@ -854,8 +800,7 @@ make_mirna_regional_plots <- function(diff_express_df,
   )
 }
 
-### Run the functions
-# Raw p-value
+# Run with raw p-values
 res_raw <- make_mirna_regional_plots(
   diff_express_df = diff_express_gender_specific_75per,
   regions    = regions,
@@ -866,7 +811,7 @@ res_raw <- make_mirna_regional_plots(
 print(res_raw$volcano_plot)
 print(res_raw$paired_plot)
 
-# Adjusted p-value 
+# Run with adjusted p-values
 res_adj <- make_mirna_regional_plots(
   diff_express_df = diff_express_gender_specific_75per,
   regions    = regions,
@@ -877,178 +822,124 @@ res_adj <- make_mirna_regional_plots(
 print(res_adj$volcano_plot)
 print(res_adj$paired_plot)
 
-
-### Save the volano plots
 #ggsave("Figures and plots/PDFs/combined_regional_volcano_rawp.pdf", res_raw$volcano_plot, width = 14, height = 6)
 #ggsave("Figures and plots/PDFs/combined_regional_volcano_adjp.pdf", res_adj$volcano_plot, width = 14, height = 6)
 
 #ggsave("Figures and plots/PNGs/combined_regional_volcano_rawp.png", res_raw$volcano_plot, width = 14, height = 6)
 #ggsave("Figures and plots/PNGs/combined_regional_volcano_adjp.png", res_adj$volcano_plot, width = 14, height = 6)
 
-### Save the miRNA count summary 
 #ggsave("Figures and plots/PDFs/mirna_count_paired_rawp.pdf",  res_raw$paired_plot,  width = 13, height = 8)
 #ggsave("Figures and plots/PDFs/mirna_count_paired_adjp.pdf",  res_adj$paired_plot,  width = 13, height = 8)
 
 #ggsave("Figures and plots/PNGs/mirna_count_paired_rawp.png",  res_raw$paired_plot,  width = 13, height = 8)
 #ggsave("Figures and plots/PNGs/mirna_count_paired_adjp.png",  res_adj$paired_plot,  width = 13, height = 8)
 
-
 # ---------------------- PCA Analysis - All Brain Regions ----------------------
 ### Prepare expression matrix for PCA
-pca_data <- data_mmu %>%
-  as.data.frame()
-
+pca_data <- data_mmu %>% as.data.frame()
 rownames(pca_data) <- pca_data$RNA
-pca_data <- pca_data[, -1]
-pca_data <- t(pca_data) %>% as.data.frame()
+pca_data <- pca_data[, -1] %>% t() %>% as.data.frame()
 
-# Filter out miRNAs with zero variance or zero mean
-col_vars <- apply(pca_data, 2, var, na.rm = TRUE)
+col_vars  <- apply(pca_data, 2, var, na.rm = TRUE)
 col_means <- colMeans(pca_data, na.rm = TRUE)
-cols_to_keep <- (col_vars > 0) & (col_means > 0)
-pca_data_filtered <- pca_data[, cols_to_keep]
+pca_data_filtered <- pca_data[, (col_vars > 0) & (col_means > 0)]
 
-# Build sample metadata
 sample_ids <- rownames(pca_data_filtered)
 sample_metadata <- data.frame(
   Sample     = sample_ids,
   Region     = sapply(sample_ids, get_region),
-  Sample_Num = sapply(sample_ids, get_sample_num),
-  stringsAsFactors = FALSE
+  Sample_Num = sapply(sample_ids, get_sample_num)
 )
 
 # Assign treatment and sex from region and sample number
 ts <- t(mapply(assign_treatment_sex, sample_metadata$Region, sample_metadata$Sample_Num))
 sample_metadata$Treatment <- ts[, 1]
-sample_metadata$Sex        <- ts[, 2]
-
+sample_metadata$Sex       <- ts[, 2]
 sample_metadata_pca <- sample_metadata %>%
   mutate(Group = paste(Treatment, Sex, sep = "_"),
          Region_Treatment = paste(Region, Treatment, sep = "_"))
 
 ### Run the PCA and extract variance explained by each PC
 pca_result <- prcomp(pca_data_filtered, scale. = TRUE, center = TRUE)
-variance_explained <- summary(pca_result)$importance[2,] * 100
+variance_explained <- summary(pca_result)$importance[2, ] * 100
 pc1_var <- round(variance_explained[1], 1)
 pc2_var <- round(variance_explained[2], 1)
 
-pca_coords <- data.frame(PC1 = pca_result$x[,1], PC2 = pca_result$x[,2])
-plot_data <- cbind(sample_metadata_pca, pca_coords)
+plot_data <- cbind(sample_metadata_pca,
+                   data.frame(PC1 = pca_result$x[, 1], PC2 = pca_result$x[, 2]))
+
+pca_theme <- theme_minimal() +
+  theme(text         = element_text(family = "Helvetica", size = 12, color = "black"),
+        axis.text    = element_text(size = 14),
+        axis.title   = element_text(size = 16, face = "bold"),
+        plot.title   = element_text(size = 18, face = "bold", hjust = 0.5),
+        legend.title = element_text(size = 16, face = "bold"),
+        legend.text  = element_text(size = 16),
+        legend.position = "right")
 
 ### PCA 1: colored by brain region, shaped by treatment
-pca_region <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Region, shape = Treatment)) +
+pca_region <- ggplot(plot_data, aes(PC1, PC2, color = Region, shape = Treatment)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = region_colors) +
-  scale_shape_manual(values = c("Control" = 16, "PLX" = 17)) +
-  theme_minimal() +
-  labs(
-    title = "PCA: miRNA Expression Across Brain Regions",
-    x = paste0("PC1 (", pc1_var, "% variance)"),
-    y = paste0("PC2 (", pc2_var, "% variance)"),
-    color = "Brain Region", shape = "Treatment"
-  ) +
-  theme(
-    text = element_text(family = "Helvetica", size = 12, color = "black"),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    legend.title = element_text(size = 16, face = "bold"),
-    legend.text = element_text(size = 16),
-    legend.position = "right"
-  )
+  scale_shape_manual(values = c(Control = 16, PLX = 17)) +
+  labs(title = "PCA: miRNA Expression Across Brain Regions",
+       x = paste0("PC1 (", pc1_var, "% variance)"),
+       y = paste0("PC2 (", pc2_var, "% variance)"),
+       color = "Brain Region", shape = "Treatment") +
+  pca_theme
 
 ### PCA 2: colored by treatment, shaped by brain region
-pca_treatment <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Treatment, shape = Region)) +
+pca_treatment <- ggplot(plot_data, aes(PC1, PC2, color = Treatment, shape = Region)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = treatment_colors) +
   scale_shape_manual(values = c("Bregma -2.06" = 16, "Olfactory Bulb" = 17,
                                 "Caudate Putamen" = 15, "Cerebellum" = 18)) +
-  theme_minimal() +
-  labs(
-    title = "PCA: Treatment Effect Across Regions",
-    x = paste0("PC1 (", pc1_var, "% variance)"),
-    y = paste0("PC2 (", pc2_var, "% variance)"),
-    color = "Treatment", shape = "Region"
-  ) +
-  theme(
-    text = element_text(family = "Helvetica", size = 12, color = "black"),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    legend.title = element_text(size = 16, face = "bold"),
-    legend.text = element_text(size = 16),
-    legend.position = "right"
-  )
+  labs(title = "PCA: Treatment Effect Across Regions",
+       x = paste0("PC1 (", pc1_var, "% variance)"),
+       y = paste0("PC2 (", pc2_var, "% variance)"),
+       color = "Treatment", shape = "Region") +
+  pca_theme
 
 ### PCA 3: colored by sex, shaped by treatment
-pca_sex <- ggplot(plot_data, aes(x = PC1, y = PC2, color = Sex, shape = Treatment)) +
+pca_sex <- ggplot(plot_data, aes(PC1, PC2, color = Sex, shape = Treatment)) +
   geom_point(size = 4, alpha = 0.8) +
   scale_color_manual(values = sex_colors) +
-  scale_shape_manual(values = c("Control" = 16, "PLX" = 17)) +
-  theme_minimal() +
-  labs(
-    title = "PCA: Sex Differences in miRNA Expression",
-    x = paste0("PC1 (", pc1_var, "% variance)"),
-    y = paste0("PC2 (", pc2_var, "% variance)"),
-    color = "Sex", shape = "Treatment"
-  ) +
-  theme(
-    text = element_text(family = "Helvetica", size = 12, color = "black"),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    legend.title = element_text(size = 16, face = "bold"),
-    legend.text = element_text(size = 16),
-    legend.position = "right"
-  )
-
-#ggsave("Figures and plots/PCAs/PCA_by_region.png", pca_region, width = 10, height = 8, dpi = 300)
-#ggsave("Figures and plots/PCAs/PCA_by_treatment.png", pca_treatment, width = 10, height = 8, dpi = 300)
-#ggsave("Figures and plots/PCAs/PCA_by_sex.png", pca_sex, width = 10, height = 8, dpi = 300)
+  scale_shape_manual(values = c(Control = 16, PLX = 17)) +
+  labs(title = "PCA: Sex Differences in miRNA Expression",
+       x = paste0("PC1 (", pc1_var, "% variance)"),
+       y = paste0("PC2 (", pc2_var, "% variance)"),
+       color = "Sex", shape = "Treatment") +
+  pca_theme
 
 #ggsave("Figures and plots/PCAs/PCA_by_region.pdf", pca_region, width = 10, height = 8, dpi = 300)
 #ggsave("Figures and plots/PCAs/PCA_by_treatment.pdf", pca_treatment, width = 10, height = 8, dpi = 300)
 #ggsave("Figures and plots/PCAs/PCA_by_sex.pdf", pca_sex, width = 10, height = 8, dpi = 300)
 
 # ---------------------- Exporting all the tables for supplement ----------------------
-### Output directory
 OUT_DIR <- "Figures and plots/Generated matrices/For supplement"
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
-# Shared style helpers
 EXCEL_FONT        <- "Helvetica"
 EXCEL_HEADER_FILL <- "#4F81BD"
 EXCEL_HEADER_SIZE <- 13
 EXCEL_BODY_SIZE   <- 12
 
 make_header_style <- function() {
-  createStyle(
-    fontName       = EXCEL_FONT,
-    fontSize       = EXCEL_HEADER_SIZE,
-    fontColour     = "white",
-    halign         = "center",
-    valign         = "center",
-    textDecoration = "bold",
-    fgFill         = EXCEL_HEADER_FILL,
-    border         = "Bottom",
-    borderColour   = "white"
-  )
+  createStyle(fontName = EXCEL_FONT, fontSize = EXCEL_HEADER_SIZE,
+              fontColour = "white", halign = "center", valign = "center",
+              textDecoration = "bold", fgFill = EXCEL_HEADER_FILL,
+              border = "Bottom", borderColour = "white")
 }
 
 make_body_style <- function() {
-  createStyle(
-    fontName = EXCEL_FONT,
-    fontSize = EXCEL_BODY_SIZE,
-    halign   = "left",
-    valign   = "center"
-  )
+  createStyle(fontName = EXCEL_FONT, fontSize = EXCEL_BODY_SIZE,
+              halign = "left", valign = "center")
 }
 
 apply_sheet_styles <- function(wb, sheet_name, n_rows, n_cols,
                                header_style = make_header_style(),
                                body_style   = make_body_style()) {
-  addStyle(wb, sheet_name, header_style,
-           rows = 1, cols = 1:n_cols, gridExpand = TRUE)
+  addStyle(wb, sheet_name, header_style, rows = 1, cols = 1:n_cols, gridExpand = TRUE)
   if (n_rows > 0)
     addStyle(wb, sheet_name, body_style,
              rows = 2:(n_rows + 1), cols = 1:n_cols, gridExpand = TRUE)
@@ -1057,12 +948,8 @@ apply_sheet_styles <- function(wb, sheet_name, n_rows, n_cols,
 }
 
 add_index_sheet <- function(wb, sheet_names, descriptions, counts = NULL) {
-  summary_df <- data.frame(
-    Sheet_Number = seq_along(sheet_names),
-    Sheet_Name   = sheet_names,
-    Description  = descriptions,
-    stringsAsFactors = FALSE
-  )
+  summary_df <- data.frame(Sheet_Number = seq_along(sheet_names),
+                           Sheet_Name = sheet_names, Description = descriptions)
   if (!is.null(counts)) summary_df$N_entries <- counts
   addWorksheet(wb, "Index", gridLines = TRUE)
   writeData(wb, "Index", summary_df)
@@ -1070,10 +957,8 @@ add_index_sheet <- function(wb, sheet_names, descriptions, counts = NULL) {
   invisible(summary_df)
 }
 
-
-### TABLE 2 — all deregulated miRNAs (raw + adj p-values, sex-specific, all brain regions)
+# Supp Table 2: all miRNAs with raw + adj p-values across regions and sexes
 prepare_region_sex_data_full <- function(diff_express_df, region_code, region_name) {
-  
   make_block <- function(sex_code, sex_label) {
     fc_col   <- paste0("fc_Comparison__Treatment_",         region_code, "_", sex_code,
                        "_vs_Control_",                      region_code, "_", sex_code)
@@ -1083,35 +968,25 @@ prepare_region_sex_data_full <- function(diff_express_df, region_code, region_na
                        "_vs_Control_",                      region_code, "_", sex_code)
     
     diff_express_df %>%
-      dplyr::select(
-        miRNA      = RNA,
-        FoldChange = all_of(fc_col),
-        raw_pvalue = all_of(rawp_col),
-        adj_pvalue = all_of(adjp_col)
-      ) %>%
+      dplyr::select(miRNA = RNA, FoldChange = all_of(fc_col),
+                    raw_pvalue = all_of(rawp_col), adj_pvalue = all_of(adjp_col)) %>%
       mutate(
         Region          = region_name,
         Sex             = sex_label,
         log2FC          = log2(FoldChange),
         Significant_raw = (abs(log2FC) > 1 & raw_pvalue < 0.05),
         Significant_adj = (abs(log2FC) > 1 & adj_pvalue < 0.05),
-        Direction_raw   = case_when(
-          Significant_raw & log2FC > 0 ~ "Upregulated",
-          Significant_raw & log2FC < 0 ~ "Downregulated",
-          TRUE                         ~ "Not significant"
-        ),
-        Direction_adj   = case_when(
-          Significant_adj & log2FC > 0 ~ "Upregulated",
-          Significant_adj & log2FC < 0 ~ "Downregulated",
-          TRUE                         ~ "Not significant"
-        )
+        Direction_raw   = case_when(Significant_raw & log2FC > 0 ~ "Upregulated",
+                                    Significant_raw & log2FC < 0 ~ "Downregulated",
+                                    TRUE ~ "Not significant"),
+        Direction_adj   = case_when(Significant_adj & log2FC > 0 ~ "Upregulated",
+                                    Significant_adj & log2FC < 0 ~ "Downregulated",
+                                    TRUE ~ "Not significant")
       ) %>%
-      dplyr::select(miRNA, Region, Sex,
-                    log2FC, FoldChange,
+      dplyr::select(miRNA, Region, Sex, log2FC, FoldChange,
                     raw_pvalue, Direction_raw, Significant_raw,
                     adj_pvalue, Direction_adj, Significant_adj)
   }
-  
   bind_rows(make_block("M", "M"), make_block("F", "F"))
 }
 
@@ -1122,7 +997,6 @@ all_mirna_full <- map_dfr(names(regions), function(reg_code) {
 ### Export
 export_table2_all_mirnas <- function() {
   fname <- file.path(OUT_DIR, "Supplementary_Table_2_Detected_miRNAs_DEA.xlsx")
-  
   wb <- createWorkbook()
   hs <- make_header_style()
   bs <- make_body_style()
@@ -1132,21 +1006,15 @@ export_table2_all_mirnas <- function() {
   
   for (reg in region_order) {
     for (sx in sex_order) {
-      
       sheet_name <- paste0(substr(gsub(" ", "_", gsub("-", "", reg)), 1, 18), "_", sx)
       
-      df <- all_mirna_full %>%
-        filter(Region == reg, Sex == sx) %>%
-        arrange(raw_pvalue)
-      
+      df <- all_mirna_full %>% filter(Region == reg, Sex == sx) %>% arrange(raw_pvalue)
       if (nrow(df) == 0) next
       
       addWorksheet(wb, sheet_name)
       writeData(wb, sheet_name, df)
       apply_sheet_styles(wb, sheet_name, nrow(df), ncol(df), hs, bs)
       
-      # Colour rows by raw-p significance (matches main figure convention);
-      # adj-p significance is available as a column for reviewers.
       rows_up   <- which(df$Direction_raw == "Upregulated")   + 1
       rows_down <- which(df$Direction_raw == "Downregulated") + 1
       
@@ -1159,7 +1027,6 @@ export_table2_all_mirnas <- function() {
     }
   }
   
-  # Summary sheet — counts under both thresholds
   summary_raw <- all_mirna_full %>%
     filter(Significant_raw) %>%
     group_by(Region, Sex, Direction_raw) %>%
@@ -1182,7 +1049,6 @@ export_table2_all_mirnas <- function() {
   writeData(wb, "Summary", summary_df)
   apply_sheet_styles(wb, "Summary", nrow(summary_df), ncol(summary_df), hs, bs)
   
-  # Move the Summary sheet to the front of the workbook
   summary_idx <- which(names(wb) == "Summary")
   worksheetOrder(wb) <- c(summary_idx, setdiff(seq_along(names(wb)), summary_idx))
   
@@ -1195,12 +1061,12 @@ export_table2_all_mirnas <- function() {
 mirna_set <- c(
   "miR-142a-3p"  = "mmu_miR_142_3p_000464",
   "miR-142a-5p"  = "mmu_miR_142_5p_002248",
-  "miR-146a-5p" = "mmu_miR_146a_000468",
+  "miR-146a-5p"  = "mmu_miR_146a_000468",
   "miR-200a-3p"  = "mmu_miR_200a_000502",
-  "miR-205-5p"  = "mmu_miR_205_000509",
-  "miR-223-3p"  = "mmu_miR_223_002295",
-  "miR-409-3p" = "mmu_miR_409_3p_002332",
-  "miR-433-5p" = "mmu_miR_433_5p_001078"
+  "miR-205-5p"   = "mmu_miR_205_000509",
+  "miR-223-3p"   = "mmu_miR_223_002295",
+  "miR-409-3p"   = "mmu_miR_409_3p_002332",
+  "miR-433-5p"   = "mmu_miR_433_5p_001078"
 )
 
 cell_type_map <- tibble(
@@ -1234,7 +1100,6 @@ extract_mirna <- function(primer_id) {
 
 ### Horizontal bar plot
 plot_mirna <- function(df, mirna_name) {
-  # reverse levels so Brainstem sits at top of horizontal plot
   df$cell_type <- factor(df$cell_type, levels = rev(cell_type_map$cell_type))
   
   ggplot(df, aes(x = fold_plot, y = cell_type)) +
@@ -1274,29 +1139,63 @@ walk2(names(mirna_set), unname(mirna_set), function(mirna_name, primer_id) {
   
   fname <- gsub("[^A-Za-z0-9]+", "_", mirna_name)
   
-  ### Save the plots
   #ggsave(file.path(out_dir, paste0(fname, "_brainstem.pdf")), p, width = 3.3, height = 3.0, device = cairo_pdf)
   #ggsave(file.path(out_dir, paste0(fname, "_brainstem.png")), p, width = 3.3, height = 3.0, dpi = 300, bg = "white")
 })
 
 # ---------------------- miRNA expression (overlap 3 datasets - PMID: 37217597; 40161726) ----------------------
-### Direction-matched significant-set extractor
-get_sig_set <- function(df, fc_col, p_col,
-                        direction = c("up", "down", "both"),
-                        fc_threshold = 1, p_threshold = 0.05) {
-  direction <- match.arg(direction)
-  fc <- df[[fc_col]]; p <- df[[p_col]]
-  l2 <- ifelse(fc > 0, log2(fc), NA_real_)
-  keep <- !is.na(l2) & !is.na(p) & p < p_threshold & abs(l2) > fc_threshold
-  if (direction == "up")   keep <- keep & l2 >  fc_threshold
-  if (direction == "down") keep <- keep & l2 < -fc_threshold
-  strip_mmu(df$RNA[keep])
-}
+### Detection threshold for external sorted-cell datasets (rpmm)
+RPMM_DETECTION_THRESHOLD <- 5
 
-### Depleted set (derived from this study)
-region_codes_depleted <- c(S = "Bregma -2.06", 
+rpmm_external <- read.delim(
+  "Input files/miRNA_complete_quantification_rpmm_norm.csv",
+  header = TRUE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE
+)
+
+annot_external <- read.delim(
+  "Input files/annotation.csv",
+  header = TRUE, sep = "\t", stringsAsFactors = FALSE
+)
+
+### Define sample groups from annotation
+engel_young_ids <- annot_external %>%
+  dplyr::filter(Comparison_Group == "12W-microglia") %>% dplyr::pull(ID)
+engel_aged_ids  <- annot_external %>%
+  dplyr::filter(Comparison_Group == "84W-microglia") %>% dplyr::pull(ID)
+
+walsh_cd45_F_ids <- annot_external %>%
+  dplyr::filter(Comparison_Group == "8W-F-CD45") %>% dplyr::pull(ID)
+walsh_cd45_M_ids <- annot_external %>%
+  dplyr::filter(Comparison_Group == "8W-M-CD45") %>% dplyr::pull(ID)
+
+rpmm_mir <- rpmm_external %>% dplyr::filter(grepl("^mmu-miR-", miRNA))
+
+rpmm_mir$engel_young_mean <- rowMeans(rpmm_mir[, engel_young_ids, drop = FALSE], na.rm = TRUE)
+rpmm_mir$engel_aged_mean  <- rowMeans(rpmm_mir[, engel_aged_ids,  drop = FALSE], na.rm = TRUE)
+
+engel_detected <- rpmm_mir %>%
+  dplyr::filter(engel_young_mean >= RPMM_DETECTION_THRESHOLD |
+                  engel_aged_mean  >= RPMM_DETECTION_THRESHOLD) %>%
+  dplyr::pull(miRNA) %>%
+  strip_mmu() %>%
+  sort() %>%
+  unique()
+
+### Walsh: mean rpmm per sex in CD45+ fraction, detected if >= threshold in either sex
+rpmm_mir$walsh_cd45_F_mean <- rowMeans(rpmm_mir[, walsh_cd45_F_ids, drop = FALSE], na.rm = TRUE)
+rpmm_mir$walsh_cd45_M_mean <- rowMeans(rpmm_mir[, walsh_cd45_M_ids, drop = FALSE], na.rm = TRUE)
+
+walsh_detected <- rpmm_mir %>%
+  dplyr::filter(walsh_cd45_F_mean >= RPMM_DETECTION_THRESHOLD |
+                  walsh_cd45_M_mean >= RPMM_DETECTION_THRESHOLD) %>%
+  dplyr::pull(miRNA) %>%
+  strip_mmu() %>%
+  sort() %>%
+  unique()
+
+region_codes_depleted <- c(S  = "Bregma -2.06",
                            OB = "Olfactory Bulb",
-                           CP = "Caudate Putamen", 
+                           CP = "Caudate Putamen",
                            CE = "Cerebellum")
 
 get_depleted_set <- function(df, region_codes,
@@ -1314,79 +1213,77 @@ get_depleted_set <- function(df, region_codes,
   sort(unique(hits))
 }
 
-###  Build the three sets
 depleted_this_study <- get_depleted_set(diff_express_gender_specific_75per, region_codes_depleted)
 
-aging_up <- get_sig_set(diff_exp_external,
-                        "fc_Comparison_Group__84W-microglia_vs_12W-microglia",
-                        "ttest_rawp_Comparison_Group__84W-microglia_vs_12W-microglia", "up")
+cat("Set sizes —",
+    "Depleted:", length(depleted_this_study),
+    "| Engel detected:", length(engel_detected),
+    "| Walsh detected:", length(walsh_detected), "\n")
 
-enrich_F <- get_sig_set(diff_exp_external,
-                        "fc_Comparison_Group__8W-F-CD45_vs_8W-F-Bulk",
-                        "ttest_rawp_Comparison_Group__8W-F-CD45_vs_8W-F-Bulk", "up")
-enrich_M <- get_sig_set(diff_exp_external,
-                        "fc_Comparison_Group__8W-M-CD45_vs_8W-M-Bulk",
-                        "ttest_rawp_Comparison_Group__8W-M-CD45_vs_8W-M-Bulk", "up")
-microglia_enriched <- union(enrich_F, enrich_M)
+### Compute set intersections
+A <- depleted_this_study
+B <- engel_detected
+C <- walsh_detected
 
-cat("Set sizes — Depleted:", length(depleted_this_study),
-    "| Aging:", length(aging_up),
-    "| Enriched:", length(microglia_enriched), "\n")
-cat("All three:",
-    paste(Reduce(intersect, list(depleted_this_study, aging_up, microglia_enriched)), collapse = ", "), "\n")
+triple  <- Reduce(intersect, list(A, B, C))
+AB_only <- setdiff(intersect(A, B), C)
+AC_only <- setdiff(intersect(A, C), B)
+BC_only <- setdiff(intersect(B, C), A)
 
+cat("Triple overlap:", paste(triple, collapse = ", "), "\n")
+if (length(AB_only) > 0) cat("Depleted ∩ Engel only:", paste(AB_only, collapse = ", "), "\n")
+if (length(AC_only) > 0) cat("Depleted ∩ Walsh only:", paste(AC_only, collapse = ", "), "\n")
+cat("Engel ∩ Walsh only:", length(BC_only), "miRNAs\n")
 
-### Labeled Venn — miRNA names written into each region
-venn_sets <- list(
-  "Depleted microglia\n(PLX, this study)"                  = depleted_this_study,
-  "Aged microglia (84W > 12W)\n(Engel et al.)"             = aging_up,
-  "Microglia-enriched (8W CD45 > Bulk)\n(Walsh et al.)"    = microglia_enriched
+### Euler plot
+euler_input <- c(
+  "Depleted"       = length(setdiff(setdiff(A, B), C)),
+  "Engel"          = length(setdiff(setdiff(B, A), C)),
+  "Walsh"          = length(setdiff(setdiff(C, A), B)),
+  "Depleted&Engel" = length(AB_only),
+  "Depleted&Walsh" = length(AC_only),
+  "Engel&Walsh"    = length(BC_only),
+  "Depleted&Engel&Walsh" = length(triple)
 )
 
-# Define sets names and function for Venn diagram
-A <- depleted_this_study
-B <- aging_up
-C <- microglia_enriched
+fit <- euler(euler_input)
 
-venn_function <- function(v, max_names = 4) {
+label_fn <- function(v, max_names = 4) {
   if (length(v) == 0) return("")
-  if (length(v) > max_names) return(as.character(length(v))) 
+  if (length(v) > max_names) return(as.character(length(v)))
   paste(v, collapse = "\n")
 }
 
-### Region label positions
-region_labels <- data.frame(
-  x = c(-0.8,  0.8,  0.0,  0.0, -0.5,  0.5,  0.0),
-  y = c( 0.8,  0.8, -0.8,  0.8, -0.1, -0.1,  0.2),
-  lab = c(
-    venn_function(setdiff(setdiff(A, B), C)),
-    venn_function(setdiff(setdiff(B, A), C)),
-    venn_function(setdiff(setdiff(C, A), B)),
-    venn_function(setdiff(intersect(A, B), C)),
-    venn_function(setdiff(intersect(A, C), B)),
-    venn_function(setdiff(intersect(B, C), A)),
-    venn_function(Reduce(intersect, list(A, B, C)))
-  ),
-  stringsAsFactors = FALSE)
+region_counts <- c(
+  label_fn(setdiff(setdiff(A, B), C)),
+  label_fn(setdiff(setdiff(B, A), C)),
+  label_fn(setdiff(setdiff(C, A), B)),
+  label_fn(AB_only),
+  label_fn(AC_only),
+  label_fn(BC_only),
+  label_fn(triple)
+)
 
-venn_labeled <- ggvenn(
-  venn_sets,
-  fill_color      = c("#ad75a1", "#c7a469", "#6ca2a7"),
-  stroke_size     = 0.3,
-  set_name_size   = 3.5,
-  text_size       = 0,
-  show_percentage = FALSE) +
-  geom_text(data = region_labels, aes(x, y, label = lab),
-            inherit.aes = FALSE, size = 2.5, fontface = "italic",
-            family = "Helvetica", lineheight = 0.9, color = "black") +
-  ggtitle("") +
-  theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5,
-                                  family = "Helvetica"))
+p_euler <- plot(fit,
+                fills = list(fill = c("#ad75a1", "#c7a469", "#6ca2a7"), alpha = 0.45),
+                edges = list(col = "grey40", lwd = 0.5),
+                labels = list(
+                  labels = c(
+                    "Downregulated\nafter PLX\n(this study)",
+                    "Detected in\nFACS-sorted microglia\n(Engel et al.)",
+                    "Detected in\nCD45+ sorted cells\n(Walsh et al.)"
+                  ),
+                  fontfamily = "Helvetica",
+                  fontsize = 10
+                ),
+                quantities = list(
+                  labels = region_counts,
+                  fontfamily = "Helvetica",
+                  fontsize = 8,
+                  fontface = "italic"
+                ))
 
-print(venn_labeled)
-
-#ggsave("Figures and plots/PNGs/mirna_overlap_three_set_labeled.png", venn_labeled, width = 8, height = 6)
-#ggsave("Figures and plots/PDFs/mirna_overlap_three_set_labeled.pdf", venn_labeled, width = 8, height = 6)
+print(p_euler)
 
 # ---------------------- miRNA biological variability ----------------------
 # Expression matrix
@@ -1404,7 +1301,6 @@ mirna_mat <- mirna_mat[expressed_mirnas, , drop = FALSE]
 cat(sprintf("Variance partition: %d miRNAs x %d samples retained\n",
             nrow(mirna_mat), ncol(mirna_mat)))
 
-# Sample metadata
 sample_info <- data.frame(
   Sample     = colnames(mirna_mat),
   Region     = sapply(colnames(mirna_mat), get_region),
@@ -1431,7 +1327,6 @@ print(table(sample_info$Animal, sample_info$Region))
 cat("\nAnimal -> Sex/Treatment (must be 1:1):\n")
 print(unique(sample_info[, c("Animal", "Sex", "Treatment")]) %>% arrange(Animal))
 
-# Colors to use for plotting
 VPART_COLORS <- c(
   Region    = "#8b3a7a",
   Animal    = "#538f8f",
@@ -1460,43 +1355,31 @@ vpart_all    <- sortCols(vpart_all)
 cat("\n=== Global variance partition (median % across miRNAs) ===\n")
 print(round(sort(colMeans(vpart_all) * 100, decreasing = TRUE), 2))
 
-p_vpart_all <- plotVarPart(vpart_all,
-                           col = VPART_COLORS[colnames(vpart_all)]) +
-  labs(title    = "miRNA variance partition — all brain regions",
-       y        = "Variance explained (%)") +
-  VPART_THEME
+p_vpart_all <- as.data.frame(unclass(vpart_all), check.names = FALSE) %>%
+  pivot_longer(cols = everything(),
+               names_to  = "Component",
+               values_to = "Variance") %>%
+  mutate(
+    Component = factor(Component, levels = colnames(vpart_all)),
+    Variance  = Variance * 100
+  ) %>%
+  ggplot(aes(x = Component, y = Variance, fill = Component)) +
+  geom_violin(scale = "width", trim = FALSE, colour = "white") +
+  geom_boxplot(width = 0.07, outlier.shape = NA,
+               fill = "white", colour = "grey30", linewidth = 0.4) +
+  scale_fill_manual(values = VPART_COLORS) +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = seq(0, 100, 25),
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(title = "miRNA variance partition - all brain regions",
+       y     = "Variance explained (%)") +
+  VPART_THEME +
+  theme(axis.title.x = element_blank())
 
 print(p_vpart_all)
 
-### Region-removed partition
-mirna_mat_regionout <- removeBatchEffect(mirna_mat, batch = sample_info$Region)
-
-variable_after_resid  <- matrixStats::rowVars(mirna_mat_regionout) > 0
-mirna_mat_regionout   <- mirna_mat_regionout[variable_after_resid, , drop = FALSE]
-cat(sprintf("\nRegion-removed matrix: %d miRNAs x %d samples\n",
-            nrow(mirna_mat_regionout), ncol(mirna_mat_regionout)))
-
-formula_noregion  <- ~ (1|Sex) + (1|Treatment) + (1|Animal)
-vpart_noregion    <- fitExtractVarPartModel(mirna_mat_regionout,
-                                            formula_noregion, sample_info)
-vpart_noregion    <- sortCols(vpart_noregion)
-
-cat("\n=== Region-removed variance partition (median % across miRNAs) ===\n")
-print(round(sort(colMeans(vpart_noregion) * 100, decreasing = TRUE), 2))
-
-p_vpart_noregion <- plotVarPart(vpart_noregion,
-                                col = VPART_COLORS[colnames(vpart_noregion)]) +
-  labs(title    = "miRNA variance partition — region effect removed",
-       y        = "Variance explained (%)") +
-  VPART_THEME
-
-print(p_vpart_noregion)
-
-### Save
 #ggsave("Figures and plots/PNGs/VarPart_miRNA_global.png", p_vpart_all, width = 8, height = 6, dpi = 300)
 #ggsave("Figures and plots/PDFs/VarPart_miRNA_global.pdf", p_vpart_all, width = 8, height = 6)
-#ggsave("Figures and plots/PNGs/VarPart_miRNA_regionremoved.png", p_vpart_noregion, width = 8, height = 6, dpi = 300)
-#ggsave("Figures and plots/PDFs/VarPart_miRNA_regionremoved.pdf", p_vpart_noregion, width = 8, height = 6)
 
 # ---------------------- Combined FC plot: study depletion effect x Pomper cell-type enrichment ----------------------
 mirna_order <- names(mirna_set)
@@ -1515,11 +1398,9 @@ pomper_matrix <- pomper_matrix_df %>%
   pivot_wider(names_from = cell_type, values_from = log2FC) %>%
   column_to_rownames("miRNA")
 
-# Fix column order and row order
 pomper_matrix <- pomper_matrix[mirna_order, cell_type_map$cell_type]
 pomper_matrix <- as.matrix(pomper_matrix)
 
-# Build study depletion matrix
 region_sex_cols <- expand.grid(
   Region = c("Bregma -2.06", "Olfactory Bulb", "Caudate Putamen", "Cerebellum"),
   Sex = c("M", "F"),
@@ -1539,7 +1420,6 @@ study_matrix <- study_matrix_df %>%
 study_matrix <- study_matrix[mirna_order, region_sex_cols$col_label]
 study_matrix <- as.matrix(study_matrix)
 
-# Significance mask (raw p < 0.05, matching your main-figure convention)
 sig_matrix_df <- study_matrix_df %>%
   dplyr::select(miRNA_clean, col_label, Significant_raw) %>%
   pivot_wider(names_from = col_label, values_from = Significant_raw)
@@ -1550,7 +1430,6 @@ sig_matrix <- sig_matrix[mirna_order, region_sex_cols$col_label]
 sig_matrix <- as.matrix(sig_matrix)
 sig_matrix[is.na(sig_matrix)] <- FALSE
 
-### Column annotation for the study block (Region + Sex)
 study_col_ha <- HeatmapAnnotation(
   Region = region_sex_cols$Region,
   Sex    = ifelse(region_sex_cols$Sex == "M", "Male", "Female"),
@@ -1565,7 +1444,6 @@ study_col_ha <- HeatmapAnnotation(
   )
 )
 
-#Color scales
 pomper_col_fun <- colorRamp2(
   c(0, max(pomper_matrix, na.rm = TRUE) / 2, max(pomper_matrix, na.rm = TRUE)),
   c("white", "#6ca2a7", "#2E5560")
@@ -1620,7 +1498,6 @@ ht_study <- Heatmap(
                               labels_gp = gpar(fontsize = 8))
 )
 
-# Combine and draw
 combined_ht <- ht_pomper + ht_study
 
 #pdf("Figures and plots/PDFs/miRNA_celltype_depletion_heatmap.pdf", width = 6, height = 8)
@@ -1631,3 +1508,180 @@ draw(combined_ht,
      annotation_legend_side = "right")
 #dev.off()
 
+# ---------------------- miR-223-3p in Engel FACS-sorted microglia (young vs aged) ----------------------
+engel_samples <- annot_external %>%
+  dplyr::filter(Dataset == "FACS_sorted_microglia") %>%
+  dplyr::select(ID, Comparison_Group, Age)
+
+### Extract miR-223-3p expression for Engel samples
+mir223_vals <- rpmm_external %>%
+  dplyr::filter(miRNA == "mmu-miR-223-3p") %>%
+  dplyr::select(all_of(engel_samples$ID)) %>%
+  tidyr::pivot_longer(cols = everything(), names_to = "ID", values_to = "rpmm") %>%
+  dplyr::left_join(engel_samples, by = "ID") %>%
+  dplyr::mutate(
+    Age_Group = factor(
+      ifelse(Comparison_Group == "12W-microglia", "Young (12W)", "Aged (84W)"),
+      levels = c("Young (12W)", "Aged (84W)")
+    )
+  )
+
+young_vals <- mir223_vals %>% dplyr::filter(Age_Group == "Young (12W)") %>% dplyr::pull(rpmm)
+aged_vals  <- mir223_vals %>% dplyr::filter(Age_Group == "Aged (84W)")  %>% dplyr::pull(rpmm)
+
+fc_val    <- mean(aged_vals) / mean(young_vals)
+log2fc    <- log2(fc_val)
+ttest_res <- t.test(aged_vals, young_vals, var.equal = FALSE)
+
+age_colors <- c("Young (12W)" = "#7ea172", "Aged (84W)" = "#e7a977")
+
+p_mir223_engel <- ggplot(mir223_vals, aes(x = Age_Group, y = rpmm, fill = Age_Group)) +
+  geom_bar(stat = "summary", fun = "mean", width = 0.6, color = NA) +
+  geom_errorbar(stat = "summary", fun.data = mean_se, width = 0.2) +
+  geom_jitter(color = "black", width = 0.1, alpha = 0.6, size = 2.5, show.legend = FALSE) +
+  scale_fill_manual(values = age_colors) +
+  ggsignif::geom_signif(
+    comparisons = list(c("Young (12W)", "Aged (84W)")),
+    test = "t.test",
+    test.args = list(var.equal = FALSE),
+    map_signif_level = function(p) sprintf("p = %.3f", p),
+    tip_length = 0.01,
+    textsize = 4.5) +
+  annotate("text",
+           x = 1.5, y = max(aged_vals) * 0.85,
+           label = sprintf("FC = %.1f\nlog2FC = %.2f", fc_val, log2fc),
+           size = 4, hjust = 0.5, color = "grey20", fontface = "italic",
+           family = "Helvetica") +
+  labs(
+    title = "miR-223-3p in FACS-sorted microglia (Engel et al. 2025)",
+    x = "", y = "rpmm normalized counts") +
+  ylim(0, 12) +
+  theme_minimal() +
+  theme(
+    text             = element_text(family = "Helvetica"),
+    plot.title       = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.title.y     = element_text(size = 14, face = "bold"),
+    axis.text.x      = element_text(size = 14, face = "bold", color = "black"),
+    axis.text.y      = element_text(size = 12, color = "black"),
+    legend.position  = "none",
+    panel.grid.major.x = element_blank())
+
+print(p_mir223_engel)
+
+#ggsave("Figures and plots/PNGs/miR223_engel_FACS_barplot.png", p_mir223_engel, width = 7, height = 8)
+#ggsave("Figures and plots/PDFs/miR223_engel_FACS_barplot.pdf", p_mir223_engel, width = 7, height = 8)
+
+# ---------------------- Pomper cell-type enrichment for all deregulated miRNAs ----------------------
+### Collect all deregulated miRNAs (any region, any sex, any direction)
+get_all_dereg_mirnas <- function(df, region_codes,
+                                 fc_threshold = 1, p_threshold = 0.05) {
+  hits <- list()
+  for (rc in names(region_codes)) {
+    for (sx in c("M", "F")) {
+      fc_col <- paste0("fc_Comparison__Treatment_", rc, "_", sx,
+                       "_vs_Control_", rc, "_", sx)
+      p_col  <- paste0("ttest_rawp_Comparison__Treatment_", rc, "_", sx,
+                       "_vs_Control_", rc, "_", sx)
+      if (!all(c(fc_col, p_col) %in% names(df))) next
+      
+      fc <- df[[fc_col]]; p <- df[[p_col]]
+      l2 <- ifelse(fc > 0, log2(fc), NA_real_)
+      sig <- !is.na(l2) & !is.na(p) & p < p_threshold & abs(l2) > fc_threshold
+      
+      if (any(sig)) {
+        hits[[length(hits) + 1]] <- data.frame(
+          miRNA      = strip_mmu(df$RNA[sig]),
+          Region     = region_codes[[rc]],
+          Sex        = sx,
+          log2FC     = l2[sig],
+          raw_pvalue = p[sig],
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  bind_rows(hits)
+}
+
+all_dereg_detail <- get_all_dereg_mirnas(diff_express_gender_specific_75per, region_codes_depleted)
+unique_dereg_mirnas <- sort(unique(all_dereg_detail$miRNA))
+
+### Match to Pomper primer IDs using the existing mirna_set mapping
+mirna_to_primer <- setNames(rep(NA_character_, length(unique_dereg_mirnas)), unique_dereg_mirnas)
+for (m in unique_dereg_mirnas) {
+  if (m %in% names(mirna_set)) mirna_to_primer[m] <- mirna_set[[m]]
+}
+
+matched  <- names(mirna_to_primer[!is.na(mirna_to_primer)])
+no_match <- names(mirna_to_primer[is.na(mirna_to_primer)])
+if (length(no_match) > 0) {
+  cat("Not in Pomper array:", paste(no_match, collapse = ", "), "\n")
+}
+
+pomper_rows <- lapply(matched, function(m) {
+  df <- tryCatch(extract_mirna(mirna_to_primer[m]), error = function(e) NULL)
+  if (is.null(df)) return(NULL)
+  df %>% dplyr::mutate(miRNA = m)
+})
+pomper_table <- bind_rows(pomper_rows)
+
+### Wide format: one row per miRNA, one column per cell type# "ND" for not detected
+pomper_wide <- pomper_table %>%
+  dplyr::mutate(
+    fold_display = ifelse(detected, as.character(round(fold, 2)), "ND")
+  ) %>%
+  dplyr::select(miRNA, cell_type, fold_display) %>%
+  tidyr::pivot_wider(names_from = cell_type, values_from = fold_display)
+
+### Deregulation summary across regions/sexes
+dereg_summary <- all_dereg_detail %>%
+  dplyr::group_by(miRNA) %>%
+  dplyr::summarise(
+    n_region_sex = n(),
+    Regions      = paste(unique(Region), collapse = "; "),
+    Sexes        = paste(sort(unique(Sex)), collapse = ", "),
+    Direction    = ifelse(all(log2FC > 0), "Up",
+                          ifelse(all(log2FC < 0), "Down", "Mixed")),
+    .groups = "drop"
+  )
+
+# Combine
+ct_cols <- cell_type_map$cell_type
+final_table <- dereg_summary %>%
+  dplyr::left_join(pomper_wide, by = "miRNA") %>%
+  dplyr::mutate(across(all_of(ct_cols), ~ replace_na(.x, "NA"))) %>%
+  dplyr::arrange(Direction, miRNA)
+
+export_table3_pomper_enrichment <- function(df) {
+  fname <- file.path(OUT_DIR, "Supplementary_Table_3_Pomper_CellType_Enrichment.xlsx")
+  wb <- createWorkbook()
+  hs <- make_header_style()
+  bs <- make_body_style()
+  
+  addWorksheet(wb, "Cell-Type Enrichment")
+  writeData(wb, "Cell-Type Enrichment", df)
+  apply_sheet_styles(wb, "Cell-Type Enrichment", nrow(df), ncol(df), hs, bs)
+  
+  mic_rows <- which(!df$`Microglial/Immune` %in% c("ND", "NA")) + 1
+  if (length(mic_rows) > 0) {
+    addStyle(wb, "Cell-Type Enrichment",
+             createStyle(fgFill = "#e8d5e0"),
+             rows = mic_rows, cols = 1:ncol(df),
+             gridExpand = TRUE, stack = TRUE)
+  }
+  
+  nd_style <- createStyle(fontColour = "#999999")
+  for (col_idx in which(names(df) %in% ct_cols)) {
+    nd_rows <- which(df[[col_idx]] %in% c("ND", "NA")) + 1
+    if (length(nd_rows) > 0) {
+      addStyle(wb, "Cell-Type Enrichment", nd_style,
+               rows = nd_rows, cols = col_idx,
+               gridExpand = TRUE, stack = TRUE)
+    }
+  }
+  
+  saveWorkbook(wb, fname, overwrite = TRUE)
+  cat("Saved:", fname, "\n")
+}
+
+#export_table3_pomper_enrichment(final_table)
