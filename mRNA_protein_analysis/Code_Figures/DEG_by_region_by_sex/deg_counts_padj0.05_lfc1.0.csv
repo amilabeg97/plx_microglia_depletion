@@ -1,0 +1,27 @@
+Sex,Region,Up,Down
+F,Tissue Border,0,0
+F,Hippocampus/Cortex Layer I,10,218
+F,Cortical Subplate,5,142
+F,Cortex Upper Layers,1,150
+F,Striatum,0,86
+F,Cortex Deep Layers,0,131
+F,White Matter,5,340
+F,Ventricle,0,125
+F,Thalamus,3,195
+F,Hypothalamus,2,145
+F,CA3 Pyramidal Layer,0,25
+F,CA1+CA2 Pyramidal Layer,0,31
+F,Dentate Gyrus,1,32
+M,Hippocampus/Cortex Layer I,158,238
+M,Cortex Upper Layers,17,130
+M,Cortical Subplate,52,134
+M,Cortex Deep Layers,24,110
+M,Tissue Border,0,0
+M,Thalamus,133,202
+M,Striatum,32,87
+M,Hypothalamus,71,149
+M,White Matter,183,307
+M,Ventricle,22,116
+M,CA3 Pyramidal Layer,2,22
+M,CA1+CA2 Pyramidal Layer,3,30
+M,Dentate Gyrus,3,33

@@ -1,0 +1,14 @@
+sex,region,status,n_bulk,n_genes,n_deg_sig,out_all,out_sig
+M,Hippocampus/Cortex Layer I,ok,10,30074,396,DEG_by_region_by_sex/sex_M/DESeq2_all_Hippocampus_Cortex_Layer_I.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Hippocampus_Cortex_Layer_I.csv
+M,Cortex Upper Layers,ok,10,27994,147,DEG_by_region_by_sex/sex_M/DESeq2_all_Cortex_Upper_Layers.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Cortex_Upper_Layers.csv
+M,Cortical Subplate,ok,10,28154,186,DEG_by_region_by_sex/sex_M/DESeq2_all_Cortical_Subplate.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Cortical_Subplate.csv
+M,Cortex Deep Layers,ok,10,25244,134,DEG_by_region_by_sex/sex_M/DESeq2_all_Cortex_Deep_Layers.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Cortex_Deep_Layers.csv
+M,Tissue Border,ok,10,4069,0,DEG_by_region_by_sex/sex_M/DESeq2_all_Tissue_Border.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Tissue_Border.csv
+M,Thalamus,ok,10,30480,335,DEG_by_region_by_sex/sex_M/DESeq2_all_Thalamus.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Thalamus.csv
+M,Striatum,ok,10,21975,119,DEG_by_region_by_sex/sex_M/DESeq2_all_Striatum.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Striatum.csv
+M,Hypothalamus,ok,10,27069,220,DEG_by_region_by_sex/sex_M/DESeq2_all_Hypothalamus.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Hypothalamus.csv
+M,White Matter,ok,10,27659,490,DEG_by_region_by_sex/sex_M/DESeq2_all_White_Matter.csv,DEG_by_region_by_sex/sex_M/DEG_sig_White_Matter.csv
+M,Ventricle,ok,10,23416,138,DEG_by_region_by_sex/sex_M/DESeq2_all_Ventricle.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Ventricle.csv
+M,CA3 Pyramidal Layer,ok,10,18663,24,DEG_by_region_by_sex/sex_M/DESeq2_all_CA3_Pyramidal_Layer.csv,DEG_by_region_by_sex/sex_M/DEG_sig_CA3_Pyramidal_Layer.csv
+M,CA1+CA2 Pyramidal Layer,ok,10,19027,33,DEG_by_region_by_sex/sex_M/DESeq2_all_CA1_CA2_Pyramidal_Layer.csv,DEG_by_region_by_sex/sex_M/DEG_sig_CA1_CA2_Pyramidal_Layer.csv
+M,Dentate Gyrus,ok,10,18839,36,DEG_by_region_by_sex/sex_M/DESeq2_all_Dentate_Gyrus.csv,DEG_by_region_by_sex/sex_M/DEG_sig_Dentate_Gyrus.csv

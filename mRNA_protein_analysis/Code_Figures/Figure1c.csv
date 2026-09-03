@@ -1,0 +1,37 @@
+"","Var1","Var2","Freq"
+"1","Astrocyte","F_Control",61864
+"2","Choroid Plexus","F_Control",7393
+"3","Ependymal","F_Control",5414
+"4","GABAergic","F_Control",77472
+"5","Glutamatergic","F_Control",192676
+"6","MB–HB-Sero–Dopa","F_Control",1313
+"7","Microglia","F_Control",37560
+"8","Oligodendyocyte","F_Control",48586
+"9","Vascular","F_Control",40389
+"10","Astrocyte","F_PLX",107114
+"11","Choroid Plexus","F_PLX",11683
+"12","Ependymal","F_PLX",8378
+"13","GABAergic","F_PLX",120123
+"14","Glutamatergic","F_PLX",299844
+"15","MB–HB-Sero–Dopa","F_PLX",2057
+"16","Microglia","F_PLX",12172
+"17","Oligodendyocyte","F_PLX",76880
+"18","Vascular","F_PLX",78189
+"19","Astrocyte","M_Control",62606
+"20","Choroid Plexus","M_Control",12765
+"21","Ependymal","M_Control",9654
+"22","GABAergic","M_Control",81273
+"23","Glutamatergic","M_Control",214457
+"24","MB–HB-Sero–Dopa","M_Control",1625
+"25","Microglia","M_Control",29916
+"26","Oligodendyocyte","M_Control",53237
+"27","Vascular","M_Control",46656
+"28","Astrocyte","M_PLX",83954
+"29","Choroid Plexus","M_PLX",14184
+"30","Ependymal","M_PLX",8040
+"31","GABAergic","M_PLX",120827
+"32","Glutamatergic","M_PLX",304853
+"33","MB–HB-Sero–Dopa","M_PLX",2661
+"34","Microglia","M_PLX",11181
+"35","Oligodendyocyte","M_PLX",69844
+"36","Vascular","M_PLX",64919
